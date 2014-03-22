@@ -1,0 +1,29 @@
+Command line:
+   signmag_testbench_isim_beh.exe
+     -simmode  gui
+     -simrunnum  0
+     -socket  50515
+
+Tue Mar 18 17:09:28 2014
+
+
+ Elaboration Time: 0.02 sec
+
+ Current Memory Usage: 227.348 Meg
+
+ Total Signals          : 16
+ Total Nets             : 31
+ Total Signal Drivers   : 12
+ Total Blocks           : 4
+ Total Primitive Blocks : 3
+ Total Processes        : 9
+ Total Traceable Variables  : 15
+ Total Scalar Nets and Variables : 516
+Total Line Count : 27
+
+ Total Simulation Time: 0.03 sec
+
+ Current Memory Usage: 302.85 Meg
+
+Tue Mar 18 17:12:06 2014
+

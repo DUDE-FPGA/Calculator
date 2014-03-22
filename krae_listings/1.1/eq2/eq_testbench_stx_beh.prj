@@ -1,0 +1,3 @@
+vhdl isim_temp "eq1.vhd"
+vhdl isim_temp "eq2.vhd"
+vhdl isim_temp "eq_testbench.vhd"

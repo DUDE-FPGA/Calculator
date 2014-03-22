@@ -1,0 +1,2 @@
+vhdl work "prio_encoder.vhd"
+vhdl work "prio_testbench.vhd"

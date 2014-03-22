@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no" ?>
+<generated_project xmlns="http://www.xilinx.com/XMLSchema" xmlns:xil_pn="http://www.xilinx.com/XMLSchema">
+
+  <!--                                                          -->
+
+  <!--             For tool use only. Do not edit.              -->
+
+  <!--                                                          -->
+
+  <!-- ProjectNavigator created generated project file.         -->
+
+  <!-- For use in tracking generated file and other information -->
+
+  <!-- allowing preservation of process status.                 -->
+
+  <!--                                                          -->
+
+  <!-- Copyright (c) 1995-2013 Xilinx, Inc.  All rights reserved. -->
+
+  <version xmlns="http://www.xilinx.com/XMLSchema">11.1</version>
+
+  <sourceproject xmlns="http://www.xilinx.com/XMLSchema" xil_pn:fileType="FILE_XISE" xil_pn:name="/mnt/linux-data/opt/xilinx/projects/3.1/listing3.1/listing3.1.xise"/>
+
+  <files xmlns="http://www.xilinx.com/XMLSchema">
+    <file xil_pn:fileType="FILE_XST_PROJECT" xil_pn:name="/mnt/linux-data/opt/xilinx/projects/3.1/listing3.1/testbench_stx_beh.prj"/>
+    <file xil_pn:fileType="FILE_INI" xil_pn:name="/mnt/linux-data/opt/xilinx/projects/3.1/listing3.1/xilinxsim.ini"/>
+  </files>
+
+  <transforms xmlns="http://www.xilinx.com/XMLSchema">
+    <transform xil_pn:end_ts="1395146566" xil_pn:name="TRAN_copyInitialToAbstractSimulation" xil_pn:start_ts="1395146566">
+      <status xil_pn:value="SuccessfullyRun"/>
+      <status xil_pn:value="ReadyToRun"/>
+    </transform>
+    <transform xil_pn:end_ts="1395147555" xil_pn:in_ck="-345889815330495909" xil_pn:name="TRAN_copyAbstractToPostAbstractSimulation" xil_pn:start_ts="1395147555">
+      <status xil_pn:value="SuccessfullyRun"/>
+      <status xil_pn:value="ReadyToRun"/>
+      <outfile xil_pn:name="/mnt/linux-data/opt/xilinx/projects/3.1/listing3.1/prio_encoder.vhd"/>
+      <outfile xil_pn:name="/mnt/linux-data/opt/xilinx/projects/3.1/listing3.1/prio_testbench.vhd"/>
+      <outfile xil_pn:name="/mnt/linux-data/opt/xilinx/projects/3.1/listing3.1/test_prio.vhd"/>
+    </transform>
+    <transform xil_pn:end_ts="1395147526" xil_pn:name="TRAN_xawsToSimhdl" xil_pn:prop_ck="-3941440714213554848" xil_pn:start_ts="1395147526">
+      <status xil_pn:value="SuccessfullyRun"/>
+      <status xil_pn:value="ReadyToRun"/>
+    </transform>
+    <transform xil_pn:end_ts="1395147526" xil_pn:name="TRAN_schematicsToHdlSim" xil_pn:prop_ck="-6475196001510783720" xil_pn:start_ts="1395147526">
+      <status xil_pn:value="SuccessfullyRun"/>
+      <status xil_pn:value="ReadyToRun"/>
+    </transform>
+    <transform xil_pn:end_ts="1395146566" xil_pn:name="TRAN_regenerateCoresSim" xil_pn:prop_ck="1474948515429361147" xil_pn:start_ts="1395146566">
+      <status xil_pn:value="SuccessfullyRun"/>
+      <status xil_pn:value="ReadyToRun"/>
+    </transform>
+  </transforms>
+
+</generated_project>

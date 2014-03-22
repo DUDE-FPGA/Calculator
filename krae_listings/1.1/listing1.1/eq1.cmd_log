@@ -1,0 +1,10 @@
+xst -intstyle ise -ifn "/mnt/linux-data/opt/xilinx/projects/1.1/listing1.1/eq1.xst" -ofn "/mnt/linux-data/opt/xilinx/projects/1.1/listing1.1/eq1.syr" 
+ngdbuild -intstyle ise -dd _ngo -nt timestamp -i -p xc3s50-tq144-5 eq1.ngc eq1.ngd  
+map -intstyle ise -p xc3s50-tq144-5 -cm area -ir off -pr off -c 100 -o eq1_map.ncd eq1.ngd eq1.pcf 
+xst -intstyle ise -ifn "/mnt/linux-data/opt/xilinx/projects/1.1/listing1.1/eq1.xst" -ofn "/mnt/linux-data/opt/xilinx/projects/1.1/listing1.1/eq1.syr" 
+ngdbuild -intstyle ise -dd _ngo -nt timestamp -i -p xc3s50-tq144-5 eq1.ngc eq1.ngd  
+map -intstyle ise -p xc3s50-tq144-5 -cm area -ir off -pr off -c 100 -o eq1_map.ncd eq1.ngd eq1.pcf 
+par -w -intstyle ise -ol high -t 1 eq1_map.ncd eq1.ncd eq1.pcf 
+trce -intstyle ise -v 3 -s 5 -n 3 -fastpaths -xml eq1.twx eq1.ncd -o eq1.twr eq1.pcf 
+bitgen -intstyle ise -f eq1.ut eq1.ncd 
+trce -intstyle ise -v 3 -s 5 -n 3 -fastpaths -xml eq1_preroute.twx eq1_map.ncd -o eq1_preroute.twr eq1.pcf 

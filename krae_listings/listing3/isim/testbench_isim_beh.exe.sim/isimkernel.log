@@ -1,0 +1,35 @@
+Command line:
+   testbench_isim_beh.exe
+     -simmode  gui
+     -simrunnum  0
+     -socket  44373
+
+Tue Mar 18 13:09:04 2014
+
+
+ Elaboration Time: 0.03 sec
+
+ Current Memory Usage: 227.344 Meg
+
+ Total Signals          : 4
+ Total Nets             : 7
+ Total Signal Drivers   : 2
+ Total Blocks           : 4
+ Total Primitive Blocks : 3
+ Total Processes        : 2
+ Total Traceable Variables  : 13
+ Total Scalar Nets and Variables : 490
+Total Line Count : 12
+
+** Failure:Simulation Completed
+User(VHDL) Code Called Simulation Stop
+In process prio_testbench.vhd:tb 
+ 
+
+
+ Total Simulation Time: 0.04 sec
+
+ Current Memory Usage: 302.846 Meg
+
+Tue Mar 18 13:11:46 2014
+

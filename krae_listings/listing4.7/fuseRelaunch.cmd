@@ -1,0 +1,1 @@
+-intstyle "ise" -incremental -o "/mnt/linux-data/opt/xilinx/projects/listing4.7/shift_testbench_isim_beh.exe" -prj "/mnt/linux-data/opt/xilinx/projects/listing4.7/shift_testbench_beh.prj" "work.shift_testbench" 

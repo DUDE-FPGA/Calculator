@@ -1,0 +1,22 @@
+Running: /mnt/linux-data/opt/xilinx/14.7/ISE_DS/ISE/bin/lin64/unwrapped/fuse -intstyle ise -incremental -o /mnt/linux-data/opt/xilinx/projects/listing3.5/prio_testbench_isim_beh.exe -prj /mnt/linux-data/opt/xilinx/projects/listing3.5/prio_testbench_beh.prj work.prio_testbench 
+ISim P.20131013 (signature 0xfbc00daa)
+Number of CPUs detected in this system: 4
+Turning on mult-threading, number of parallel sub-compilation jobs: 8 
+Determining compilation order of HDL files
+Parsing VHDL file "/mnt/linux-data/opt/xilinx/projects/listing3.5/prio_encoder.vhd" into library work
+Parsing VHDL file "/mnt/linux-data/opt/xilinx/projects/listing3.5/prio_testbench.vhd" into library work
+Starting static elaboration
+Completed static elaboration
+Fuse Memory Usage: 95012 KB
+Fuse CPU Usage: 960 ms
+Compiling package standard
+Compiling package std_logic_1164
+Compiling architecture if_arch of entity prio_encoder [prio_encoder_default]
+Compiling architecture behavior of entity prio_testbench
+Time Resolution for simulation is 1ps.
+Waiting for 1 sub-compilation(s) to finish...
+Compiled 5 VHDL Units
+Built simulation executable /mnt/linux-data/opt/xilinx/projects/listing3.5/prio_testbench_isim_beh.exe
+Fuse Memory Usage: 660712 KB
+Fuse CPU Usage: 980 ms
+GCC CPU Usage: 190 ms

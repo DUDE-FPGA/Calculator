@@ -1,0 +1,35 @@
+Command line:
+   decoder_testbench_isim_beh.exe
+     -simmode  gui
+     -simrunnum  0
+     -socket  41235
+
+Tue Mar 18 13:49:18 2014
+
+
+ Elaboration Time: 0.01 sec
+
+ Current Memory Usage: 227.271 Meg
+
+ Total Signals          : 7
+ Total Nets             : 10
+ Total Signal Drivers   : 4
+ Total Blocks           : 3
+ Total Primitive Blocks : 2
+ Total Processes        : 3
+ Total Traceable Variables  : 8
+ Total Scalar Nets and Variables : 370
+Total Line Count : 14
+
+** Failure:Simulation Completed
+User(VHDL) Code Called Simulation Stop
+In process decoder_testbench.vhd:stim_proc 
+ 
+
+
+ Total Simulation Time: 0.03 sec
+
+ Current Memory Usage: 302.772 Meg
+
+Tue Mar 18 13:51:08 2014
+

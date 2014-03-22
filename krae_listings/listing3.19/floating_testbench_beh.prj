@@ -1,0 +1,2 @@
+vhdl work "fp_adder.vhd"
+vhdl work "floating_testbench.vhd"

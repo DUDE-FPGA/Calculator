@@ -1,0 +1,1 @@
+xst -intstyle ise -ifn "/mnt/linux-data/opt/xilinx/projects/1.1/listing1.1/main.xst" -ofn "/mnt/linux-data/opt/xilinx/projects/1.1/listing1.1/main.syr" 

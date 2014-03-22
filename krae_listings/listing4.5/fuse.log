@@ -1,0 +1,22 @@
+Running: /mnt/linux-data/opt/xilinx/14.7/ISE_DS/ISE/bin/lin64/unwrapped/fuse -intstyle ise -incremental -lib secureip -o /mnt/linux-data/opt/xilinx/projects/listing4.5/reg_testbench_isim_beh.exe -prj /mnt/linux-data/opt/xilinx/projects/listing4.5/reg_testbench_beh.prj work.reg_testbench 
+ISim P.20131013 (signature 0xfbc00daa)
+Number of CPUs detected in this system: 4
+Turning on mult-threading, number of parallel sub-compilation jobs: 8 
+Determining compilation order of HDL files
+Parsing VHDL file "/mnt/linux-data/opt/xilinx/projects/listing4.5/reg_reset.vhd" into library work
+Parsing VHDL file "/mnt/linux-data/opt/xilinx/projects/listing4.5/reg_testbench.vhd" into library work
+Starting static elaboration
+Completed static elaboration
+Fuse Memory Usage: 95012 KB
+Fuse CPU Usage: 960 ms
+Compiling package standard
+Compiling package std_logic_1164
+Compiling architecture arch of entity reg_reset [reg_reset_default]
+Compiling architecture behavior of entity reg_testbench
+Time Resolution for simulation is 1ps.
+Waiting for 1 sub-compilation(s) to finish...
+Compiled 5 VHDL Units
+Built simulation executable /mnt/linux-data/opt/xilinx/projects/listing4.5/reg_testbench_isim_beh.exe
+Fuse Memory Usage: 660720 KB
+Fuse CPU Usage: 980 ms
+GCC CPU Usage: 200 ms
