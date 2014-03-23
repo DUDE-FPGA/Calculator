@@ -85,21 +85,19 @@ begin
 				sign_next <= '1';
 				bcd_next <= "1111"; --sign handle
 				state_next <= done;
-			else
-				with ascii_reg select
-					bcd_next <=
-					"0000" when "110000",
-					"0001" when "110001",
-					"0010" when "110010",
-					"0011" when "110011",
-					"0100" when "110100",
-					"0101" when "110101",
-					"0111" when "110111",
-					"1000" when "111000",
-					"1001" when "111001",
-					"1010" when others; --invalid input handle
-				state_next <= done;
+			elsif ascii_reg="110000" then bcd_next <= "0000";
+			elsif ascii_reg="110001" then bcd_next <= "0001";
+			elsif ascii_reg="110010" then bcd_next <= "0010";
+			elsif ascii_reg="110011" then bcd_next <= "0011";
+			elsif ascii_reg="110100" then bcd_next <= "0100";
+			elsif ascii_reg="110101" then bcd_next <= "0101";
+			elsif ascii_reg="110110" then bcd_next <= "0110";
+			elsif ascii_reg="110111" then bcd_next <= "0111";
+			elsif ascii_reg="111000" then bcd_next <= "1000";
+			elsif ascii_reg="111001" then bcd_next <= "1001";
+			else bcd_next <= "1010"; --invalid input handle
 			end if;
+			state_next <= done;
 		when done =>
 			done_tick <= '1';
 			state_next <= idle;
