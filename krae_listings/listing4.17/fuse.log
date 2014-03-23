@@ -1,0 +1,41 @@
+Running: /mnt/linux-data/opt/xilinx/14.7/ISE_DS/ISE/bin/lin64/unwrapped/fuse -intstyle ise -incremental -o /mnt/linux-data/opt/xilinx/projects/listing4.17/stopwatch_testbench_isim_translate.exe -prj /mnt/linux-data/opt/xilinx/projects/listing4.17/stopwatch_testbench_translate.prj work.stopwatch_testbench 
+ISim P.20131013 (signature 0xfbc00daa)
+Number of CPUs detected in this system: 4
+Turning on mult-threading, number of parallel sub-compilation jobs: 8 
+Determining compilation order of HDL files
+Parsing VHDL file "/mnt/linux-data/opt/xilinx/projects/listing4.17/netgen/translate/stop_watch_translate.vhd" into library work
+Parsing VHDL file "/mnt/linux-data/opt/xilinx/projects/listing4.17/stopwatch_testbench.vhd" into library work
+Starting static elaboration
+Completed static elaboration
+Fuse Memory Usage: 142616 KB
+Fuse CPU Usage: 1360 ms
+Compiling package standard
+Compiling package std_logic_1164
+Compiling package textio
+Compiling package vital_timing
+Compiling package vcomponents
+Compiling package vital_primitives
+Compiling package vpackage
+Compiling architecture x_zero_v of entity X_ZERO [\X_ZERO("UNPLACED")(1,8)\]
+Compiling architecture x_one_v of entity X_ONE [\X_ONE("UNPLACED")(1,8)\]
+Compiling architecture x_sff_v of entity X_SFF [\X_SFF(true,true,true,"UNPLACED"...]
+Compiling architecture x_mux2_v of entity X_MUX2 [\X_MUX2(true,true,"UNPLACED",(0,...]
+Compiling architecture x_xor2_v of entity X_XOR2 [\X_XOR2(true,true,"UNPLACED",(0,...]
+Compiling architecture x_lut3_v of entity X_LUT3 [\X_LUT3(true,true,"UNPLACED",(0,...]
+Compiling architecture x_lut4_v of entity X_LUT4 [\X_LUT4(true,true,"UNPLACED",(0,...]
+Compiling architecture x_lut2_v of entity X_LUT2 [\X_LUT2(true,true,"UNPLACED",(0,...]
+Compiling architecture x_buf_v of entity X_BUF [\X_BUF(true,true,"UNPLACED",(0,0...]
+Compiling architecture x_inv_v of entity X_INV [\X_INV(true,true,"UNPLACED",(0,0...]
+Compiling architecture x_ckbuf_v of entity X_CKBUF [\X_CKBUF(true,true,"UNPLACED",(0...]
+Compiling architecture x_obuf_v of entity X_OBUF [\X_OBUF(true,true,"DONT_CARE",12...]
+Compiling architecture x_roc_v of entity X_ROC [\X_ROC("UNPLACED",100000,"*")(1,...]
+Compiling architecture x_toc_v of entity X_TOC [\X_TOC("UNPLACED",0,"*")(1,8,1,1...]
+Compiling architecture structure of entity stop_watch [stop_watch_default]
+Compiling architecture behavior of entity stopwatch_testbench
+Time Resolution for simulation is 1ps.
+Waiting for 9 sub-compilation(s) to finish...
+Compiled 70 VHDL Units
+Built simulation executable /mnt/linux-data/opt/xilinx/projects/listing4.17/stopwatch_testbench_isim_translate.exe
+Fuse Memory Usage: 720244 KB
+Fuse CPU Usage: 1650 ms
+GCC CPU Usage: 4610 ms

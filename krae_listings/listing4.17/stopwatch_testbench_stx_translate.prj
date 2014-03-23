@@ -1,0 +1,2 @@
+vhdl isim_temp "netgen/translate/stop_watch_translate.vhd"
+vhdl isim_temp "stopwatch_testbench.vhd"

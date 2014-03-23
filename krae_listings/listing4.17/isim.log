@@ -1,0 +1,15 @@
+ISim log file
+Running: /mnt/linux-data/opt/xilinx/projects/listing4.17/stopwatch_testbench_isim_translate.exe -intstyle ise -gui -tclbatch isim.cmd -wdb /mnt/linux-data/opt/xilinx/projects/listing4.17/stopwatch_testbench_isim_translate.wdb 
+ISim P.20131013 (signature 0xfbc00daa)
+WARNING: A WEBPACK license was found.
+WARNING: Please use Xilinx License Configuration Manager to check out a full ISim license.
+WARNING: ISim will run in Lite mode. Please refer to the ISim documentation for more information on the differences between the Lite and the Full version.
+This is a Lite version of ISim.
+Time resolution is 1 ps
+# onerror resume
+# wave add /
+# run 0.09s
+Simulator is doing circuit initialization process.
+Finished circuit initialization process.
+Stopped at time : 10301810 ns : File "/mnt/linux-data/opt/xilinx/projects/listing4.17/stopwatch_testbench.vhd" Line 84
+# exit 0

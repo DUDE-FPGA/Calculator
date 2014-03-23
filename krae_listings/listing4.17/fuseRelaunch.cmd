@@ -1,0 +1,1 @@
+-intstyle "ise" -incremental -o "/mnt/linux-data/opt/xilinx/projects/listing4.17/stopwatch_testbench_isim_translate.exe" -prj "/mnt/linux-data/opt/xilinx/projects/listing4.17/stopwatch_testbench_translate.prj" "work.stopwatch_testbench" 
