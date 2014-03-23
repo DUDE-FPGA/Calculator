@@ -1,0 +1,1 @@
+-intstyle "ise" -incremental -o "C:/Users/Vladimir/Documents/GitHub/Calculator/ascii_2_bcd/ascii_conv_testbench_isim_beh.exe" -prj "C:/Users/Vladimir/Documents/GitHub/Calculator/ascii_2_bcd/ascii_conv_testbench_beh.prj" "work.ascii_conv_testbench" 

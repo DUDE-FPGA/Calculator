@@ -1,0 +1,2 @@
+vhdl isim_temp "ascii_2_bcd.vhd"
+vhdl isim_temp "ascii_conv_testbench.vhd"
