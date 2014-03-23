@@ -47,6 +47,7 @@ ARCHITECTURE behavior OF ascii_conv_testbench IS
          ascii : IN  std_logic_vector(5 downto 0);
          bcd : OUT  std_logic_vector(3 downto 0);
          ready : OUT  std_logic;
+			sign : OUT std_logic;
          done_tick : OUT  std_logic
         );
     END COMPONENT;
@@ -62,6 +63,7 @@ ARCHITECTURE behavior OF ascii_conv_testbench IS
    signal bcd : std_logic_vector(3 downto 0);
    signal ready : std_logic;
    signal done_tick : std_logic;
+	signal sign : std_logic;
 
    -- Clock period definitions
    constant clk_period : time := 10 ns;
@@ -76,7 +78,8 @@ BEGIN
           ascii => ascii,
           bcd => bcd,
           ready => ready,
-          done_tick => done_tick
+          done_tick => done_tick,
+			 sign => sign
         );
 
    -- Clock process definitions
@@ -99,7 +102,7 @@ BEGIN
 		reset <= '0';
       wait until falling_edge(clk);
 		wait until falling_edge(clk);
-		ascii <= "110011";
+		ascii <= "110001";
 		start_conv <= '1';
 
 		wait until falling_edge(clk);
@@ -107,6 +110,42 @@ BEGIN
 		start_conv <= '0';
 		wait until falling_edge(clk);
 		wait until falling_edge(clk);
+		wait until falling_edge(clk);
+		wait until falling_edge(clk);
+		start_conv <= '1';
+		ascii <= "110010";
+		wait until falling_edge(clk);
+		wait until falling_edge(clk);
+		wait until falling_edge(clk);		
+		ascii <= "110011";
+		wait until falling_edge(clk);
+		wait until falling_edge(clk);
+		wait until falling_edge(clk);
+		ascii <= "110100";
+		wait until falling_edge(clk);
+		wait until falling_edge(clk);
+		wait until falling_edge(clk);
+		ascii <= "110101";
+		wait until falling_edge(clk);
+		wait until falling_edge(clk);
+		wait until falling_edge(clk);
+		ascii <= "110110";
+		wait until falling_edge(clk);
+		wait until falling_edge(clk);
+		wait until falling_edge(clk);
+		ascii <= "110111";
+		wait until falling_edge(clk);
+		wait until falling_edge(clk);
+		wait until falling_edge(clk);
+		ascii <= "111000";
+		wait until falling_edge(clk);
+		wait until falling_edge(clk);
+		wait until falling_edge(clk);
+		ascii <= "111001";
+		wait until falling_edge(clk);
+		wait until falling_edge(clk);
+		wait until falling_edge(clk);
+		ascii <= "101101"; -- sign
 		wait until falling_edge(clk);
 		wait until falling_edge(clk);
 		
