@@ -115,10 +115,13 @@ BEGIN
 		start_conv <= '1';
 		ascii <= "110010";
 		wait until falling_edge(clk);
+		start_conv <= '0';
 		wait until falling_edge(clk);
-		wait until falling_edge(clk);		
+		wait until falling_edge(clk);
+		start_conv <= '1';
 		ascii <= "110011";
 		wait until falling_edge(clk);
+		start_conv <= '1';
 		wait until falling_edge(clk);
 		wait until falling_edge(clk);
 		ascii <= "110100";
@@ -146,6 +149,13 @@ BEGIN
 		wait until falling_edge(clk);
 		wait until falling_edge(clk);
 		ascii <= "101101"; -- sign
+		wait until falling_edge(clk);
+		wait until falling_edge(clk);
+		wait until falling_edge(clk);
+		ascii <= "111111"; -- invalid
+		wait until falling_edge(clk);
+		wait until falling_edge(clk);
+		wait until falling_edge(clk);
 		wait until falling_edge(clk);
 		wait until falling_edge(clk);
 		

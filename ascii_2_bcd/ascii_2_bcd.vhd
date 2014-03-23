@@ -75,7 +75,7 @@ begin
 			ready <= '1';
 			if start_conv='1' then
 				ascii_next <= ascii;
-				bcd_next <= (others=>'0');
+				--bcd_next <= (others=>'0');
 				sign_next <= '0';
 				state_next <= op;
 			end if;
