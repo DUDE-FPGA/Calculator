@@ -34,6 +34,7 @@ entity ascii_2_bcd is
 			  start_conv: in std_logic;
            ascii : in  STD_LOGIC_VECTOR (5 downto 0);
            bcd : out  STD_LOGIC_VECTOR (3 downto 0);
+			  sign : out STD_LOGIC;
            ready, done_tick : out  STD_LOGIC);
 end ascii_2_bcd;
 
@@ -68,48 +69,35 @@ begin
 		state_next <= state_reg;
 		ascii_next <= ascii_reg;
 		bcd_next <= bcd_reg;
+		sign_next <= sign_reg;
 	case state_reg is
 		when idle =>
 			ready <= '1';
 			if start_conv='1' then
 				ascii_next <= ascii;
 				bcd_next <= (others=>'0');
+				sign_next <= '0';
 				state_next <= op;
 			end if;
 		when op =>
 			--checks for negative
 			if ascii_reg="101101" then
 				sign_next <= '1';
+				bcd_next <= "1111"; --sign handle
 				state_next <= done;
-			elsif ascii_reg="110000" then
-				bcd_next <= "0000";
-				state_next <= done;
-			elsif ascii_reg="110001" then
-				bcd_next <= "0001";
-				state_next <= done;
-			elsif ascii_reg="110010" then
-				bcd_next <= "0010";
-				state_next <= done;
-			elsif ascii_reg="110011" then
-				bcd_next <= "0011";
-				state_next <= done;
-			elsif ascii_reg="110100" then
-				bcd_next <= "0100";
-				state_next <= done;
-			elsif ascii_reg="110101" then
-				bcd_next <= "0101";
-				state_next <= done;
-			elsif ascii_reg="110110" then
-				bcd_next <= "0110";
-				state_next <= done;
-			elsif ascii_reg="110111" then
-				bcd_next <= "0111";
-				state_next <= done;
-			elsif ascii_reg="111000" then
-				bcd_next <= "1000";
-				state_next <= done;
-			elsif ascii_reg="111001" then
-				bcd_next <= "1001";
+			else
+				with ascii_reg select
+					bcd_next <=
+					"0000" when "110000",
+					"0001" when "110001",
+					"0010" when "110010",
+					"0011" when "110011",
+					"0100" when "110100",
+					"0101" when "110101",
+					"0111" when "110111",
+					"1000" when "111000",
+					"1001" when "111001",
+					"1010" when others; --invalid input handle
 				state_next <= done;
 			end if;
 		when done =>
@@ -119,5 +107,6 @@ begin
 	end process;
 	-- output
 	bcd <= bcd_reg;
+	sign <= sign_reg;
 end arch;
 
