@@ -86,16 +86,16 @@ begin
 				sign_next <= '1';
 				ascii_next <= "101101"; --ascii input to return a negative sign handle
 				state_next <= done;
-			elsif bcd_next="0000" then ascii_reg <= "110000";
-			elsif bcd_next="0001" then ascii_reg <= "110001";
-			elsif bcd_next="0010" then ascii_reg <= "110010";
-			elsif bcd_next="0011" then ascii_reg <= "110011";
-			elsif bcd_next="0100" then ascii_reg <= "110100";
-			elsif bcd_next="0101" then ascii_reg <= "110101";
-			elsif bcd_next="0110" then ascii_reg <= "110110";
-			elsif bcd_next="0111" then ascii_reg <= "110111";
-			elsif bcd_next="1000" then ascii_reg <= "111000";
-			elsif bcd_next="1001" then ascii_reg <= "111001";
+			elsif bcd_reg="0000" then ascii_next <= "110000";
+			elsif bcd_reg="0001" then ascii_next <= "110001";
+			elsif bcd_reg="0010" then ascii_next <= "110010";
+			elsif bcd_reg="0011" then ascii_next <= "110011";
+			elsif bcd_reg="0100" then ascii_next <= "110100";
+			elsif bcd_reg="0101" then ascii_next <= "110101";
+			elsif bcd_reg="0110" then ascii_next <= "110110";
+			elsif bcd_reg="0111" then ascii_next <= "110111";
+			elsif bcd_reg="1000" then ascii_next <= "111000";
+			elsif bcd_reg="1001" then ascii_next <= "111001";
 			else ascii_next <= "000000"; --invalid input handle seems right?
 			end if;
 			state_next <= done;
