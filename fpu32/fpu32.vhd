@@ -97,7 +97,7 @@ begin
 				signb_reg, signs_reg, expb_reg, exps_reg,
 				expn_reg, fracb_reg, fracs_reg, fraca_reg,
 				fracn_reg, sumn_reg, expdiff_reg, sum_reg,
-				lead0_reg, start)
+				lead0_reg, start, state_reg)
 	begin
 		ready <= '0';
 		done_tick <= '0';
