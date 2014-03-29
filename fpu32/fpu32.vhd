@@ -38,7 +38,7 @@ end fpu32;
 
 architecture fpu32_arch of fpu32 is
 	--Register definitions
-	type state_type is (idle, done);
+	type state_type is (idle, sort, done);
 	signal state_reg, state_next: state_type;
 	-- b - big, s - small, a - aligned, n - normalised
 	signal signb_reg, signb_next: std_logic;
@@ -73,6 +73,7 @@ begin
 			expdiff_reg<=(others=>'0');
 			sum_reg<=(others=>'0');
 			lead0_reg<=(others=>'0');
+			
 		elsif(clk'event and clk='1') then
 			state_reg<=state_next;
 			signb_reg<=signb_next;
@@ -92,14 +93,60 @@ begin
 	end process;
 	
 	-- FSMD next-state logic
-	process (fp1, fp2, fp_out,
+	process (fp1, fp2,
 				signb_reg, signs_reg, expb_reg, exps_reg,
 				expn_reg, fracb_reg, fracs_reg, fraca_reg,
 				fracn_reg, sumn_reg, expdiff_reg, sum_reg,
 				lead0_reg, start)
 	begin
-	
+		ready <= '0';
+		done_tick <= '0';
+		state_next <= state_reg;
+		signb_next <= signb_reg;
+		signs_next <= signs_reg;
+		expb_next <= expb_reg;
+		exps_next <= exps_reg;
+		expn_next <= expn_reg;
+		fracb_next <= fracb_reg;
+		fracs_next <= fracs_reg;
+		fraca_next <= fraca_reg;
+		fracn_next <= fracn_reg;
+		sumn_next <= sumn_reg;
+		expdiff_next <= expdiff_reg;
+		sum_next <= sum_reg;
+		lead0_next <= lead0_reg;
+		
+		case state_reg is
+			when idle =>
+				ready <= '1';
+				if start = '1' then
+					state_next <= sort;
+				end if;
+			-- Sort into biggest and smallest
+			when sort =>
+				if fp1(30 downto 0) > fp2(30 downto 0) then
+					signb_next <= fp1(31);
+					expb_next <= unsigned(fp1(30 downto 23));
+					fracb_next <= unsigned(fp1(22 downto 0));
+					signs_next <= fp2(31);
+					exps_next <= unsigned(fp2(30 downto 23));
+					fracs_next <= unsigned(fp2(22 downto 0));
+				else
+					signb_next <= fp2(31);
+					expb_next <= unsigned(fp2(30 downto 23));
+					fracb_next <= unsigned(fp2(22 downto 0));
+					signs_next <= fp1(31);
+					exps_next <= unsigned(fp1(30 downto 23));
+					fracs_next <= unsigned(fp1(22 downto 0));
+				end if;
+				state_next <= done;
+			when done =>
+				signb_next <= '0';
+				state_next <= idle;
+		end case;
+		
 	end process;
+	--Outputs
 
 end fpu32_arch;
 
