@@ -141,12 +141,12 @@ begin
 				end if;
 				state_next <= done;
 			when done =>
-				signb_next <= '0';
+				done_tick <= '1';
 				state_next <= idle;
 		end case;
-		
 	end process;
 	--Outputs
-
+	--Debug - check if correctly sorting
+	fp_out <= signb_reg & std_logic_vector(expb_reg) & std_logic_vector(fracb_reg);
 end fpu32_arch;
 
