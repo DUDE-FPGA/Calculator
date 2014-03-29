@@ -108,6 +108,20 @@ begin
 		ready <= '0';
 		done_tick <= '0';
 		state_next <= state_reg;
+		signb_next <= signb_reg;
+		signs_next <= signs_reg;
+		expb_next <= expb_reg;
+		exps_next <= exps_reg;
+		expn_next <= expn_reg;
+		fracb_next <= fracb_reg;
+		fracs_next <= fracs_reg;
+		fraca_next <= fraca_reg;
+		fracn_next <= fracn_reg;
+		sumn_next <= sumn_reg;
+		expdiff_next <= expdiff_reg;
+		sum_next <= sum_reg;
+		lead0_next <= lead0_reg;
+		
 	case state_reg is
 		when idle =>
 			ready <= '1';
@@ -186,6 +200,7 @@ begin
 				expn_next <= expb_reg - lead0_reg;
 				fracn_next <= sumn_reg;
 			end if;
+			state_next <= done;
 		when done => 
 			done_tick <= '1';
 			state_next <= idle;
