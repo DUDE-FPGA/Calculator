@@ -101,12 +101,19 @@ BEGIN
 		reset <= '0';
 		wait for clk_period;
 		start <= '1';
-		fp2 <= "01000000000000000000000000000000";
-		fp1 <= "01000000101000000000000000000000";
+		fp1 <= "01000000000000000000000000000000"; --2
+		fp2 <= "01000000101000000000000000000000"; --5
+		--expect fp2
 		wait for clk_period;
 		start <= '0';
       wait for clk_period*5;
-
+		start <= '1';
+		fp1 <= "01000001101000000000000000000000"; --20
+		fp2 <= "01000001001000000000000000000000"; --10
+		wait for clk_period;
+		start <= '0';
+		wait for clk_period*5;
+		--expect fp1
 		assert false
 		severity failure;
    end process;
