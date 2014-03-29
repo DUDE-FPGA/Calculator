@@ -81,6 +81,7 @@ begin
 			sum_reg<=(others=>'0');
 			lead0_reg<=(others=>'0');
 		elsif(clk'event and clk='1') then
+			state_reg<=state_next;
 			signb_reg<=signb_next;
 			signs_reg<=signs_next;
 			expb_reg<=expb_next;
@@ -103,7 +104,7 @@ begin
 				signb_reg, signs_reg, expb_reg, exps_reg,
 				expn_reg, fracb_reg, fracs_reg, fraca_reg,
 				fracn_reg, sumn_reg, expdiff_reg, sum_reg,
-				lead0_reg)
+				lead0_reg, start)
 	begin
 		ready <= '0';
 		done_tick <= '0';
