@@ -165,7 +165,7 @@ begin
 				state_next <= normalise2;
 			-- Shift number based on leading 0's
 			when normalise2 =>
-				sumn_next <= sum_reg sll to_integer(lead0_reg); -- Issue here with logic left shift
+				sumn_next <= sum_reg(22 downto 0) sll to_integer(lead0_reg); -- Issue here with logic left shift
 				state_next <= normalise3;
 			-- Prepare outputs
 			when normalise3 =>
