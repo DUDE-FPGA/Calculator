@@ -38,7 +38,8 @@ end fpu32;
 
 architecture fpu32_arch of fpu32 is
 	--Register definitions
-	type state_type is (idle, sort, align, maths, done);
+	type state_type is (idle, sort, align, maths, 
+						normalise1, normalise2, done);
 	signal state_reg, state_next: state_type;
 	-- b - big, s - small, a - aligned, n - normalised
 	signal signb_reg, signb_next: std_logic;
@@ -140,16 +141,30 @@ begin
 					fracs_next <= unsigned(fp1(22 downto 0));
 				end if;
 				state_next <= align;
+			-- Align smaller number with bigger number
 			when align =>
 				expdiff_next <= expb_reg - exps_reg;
 				fraca_next <= fracs_reg srl to_integer(expdiff_reg);
 				state_next <= maths;
+			-- Add or subtract based on signs of the numbers
 			when maths =>
 				if (signb_reg = signs_reg) then 
 					sum_next <= ('0' & fracb_reg) + ('0' & fraca_reg);
 				else sum_next <= ('0' & fracb_reg) - ('0' & fraca_reg);
 				end if;
-				state_ext <= done;
+				state_next <= done;
+			-- Count the leading 0's
+			when normalise1 =>
+				for i in 23 downto 0 loop
+					if sum_reg(i)='1' then
+						lead0_next <= to_unsigned(23 - i,3);
+					end if;
+					exit when sum_reg(i)='1';
+				end loop;
+				state_next <= normalise2;
+			-- Shift number based on leading 0's
+			when normalise2 =>
+				state_next <= done;
 			when done =>
 				done_tick <= '1';
 				state_next <= idle;
@@ -158,6 +173,6 @@ begin
 	--Outputs
 	--Debug - check if correctly sorting
 	--fp_out <= signb_reg & std_logic_vector(expb_reg) & std_logic_vector(fracb_reg);
-	fp_out <= "000000000" & std_logic_vector(fraca_reg);
+	fp_out <= "00000000" & std_logic_vector(sum_reg);
 end fpu32_arch;
 
