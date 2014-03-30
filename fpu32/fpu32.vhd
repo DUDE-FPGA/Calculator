@@ -34,7 +34,7 @@ entity fpu32 is
            done_tick, ready : out  STD_LOGIC;
 			  fp1, fp2 : in std_logic_vector(31 downto 0);
 			  fp_out : out std_logic_vector(31 downto 0);
-			  debug_val : out std_logic_vector(7 downto 0));
+			  debug_val : out std_logic_vector(23 downto 0));
 end fpu32;
 
 architecture fpu32_arch of fpu32 is
@@ -55,7 +55,7 @@ architecture fpu32_arch of fpu32 is
 	signal sumn_reg, sumn_next: unsigned(22 downto 0);
 	signal expdiff_reg, expdiff_next: unsigned(7 downto 0);
 	signal sum_reg, sum_next: unsigned(23 downto 0);
-	signal lead0_reg, lead0_next: unsigned(7 downto 0);
+	signal lead0_reg, lead0_next: unsigned(5 downto 0);
 begin
 	--Registers
 	process(clk, reset)
@@ -150,15 +150,15 @@ begin
 			-- Add or subtract based on signs of the numbers
 			when maths =>
 				if (signb_reg = signs_reg) then 
-					sum_next <= ('0' & fracb_reg) + ('0' & fraca_reg);
+					sum_next <= ('0' & fracb_reg) + ('0' & fraca_reg); -- Adding correctly
 				else sum_next <= ('0' & fracb_reg) - ('0' & fraca_reg);
 				end if;
 				state_next <= normalise1;
 			-- Count the leading 0's
 			when normalise1 =>
-				for i in 23 downto 0 loop
-					if sum_reg(i)='1' then
-						lead0_next <= to_unsigned(23 - i,8);
+				for i in 0 to 22 loop
+					if sum_reg(22-i)='1' then
+						lead0_next <= to_unsigned(i,6);
 					end if;
 					exit when sum_reg(i)='1';
 				end loop;
@@ -170,13 +170,13 @@ begin
 			-- Prepare outputs
 			when normalise3 =>
 				if sum_reg(23)='1' then -- Check for carry out
-					expn_next <= expb_reg + 1;
+					expn_next <= expb_reg + 2;
 					fracn_next <= sum_reg(23 downto 1);
 				elsif (lead0_reg > expb_reg) then -- Number too small
 					expn_next <= (others=>'0');
 					fracn_next <= (others=>'0');
 				else
-					expn_next <= expb_reg - lead0_reg;
+					expn_next <= expb_reg - lead0_reg + 1;
 					fracn_next <= sumn_reg;
 					state_next <= done;
 				end if;
@@ -188,7 +188,7 @@ begin
 	--Outputs
 	--Debug - check if correctly sorting
 	--fp_out <= signb_reg & std_logic_vector(expb_reg) & std_logic_vector(fracb_reg);
-	debug_val <= std_logic_vector(lead0_reg);
+	debug_val <= std_logic_vector(sum_reg);
 	fp_out <= signb_reg & std_logic_vector(expn_reg) & std_logic_vector(fracn_reg);
 end fpu32_arch;
 
