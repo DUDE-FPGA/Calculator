@@ -119,8 +119,8 @@ BEGIN
 		start_conv <= '0';
 		wait until falling_edge(clk);
 		wait until falling_edge(clk);
+		bcd <= "0011";
 		start_conv <= '1';
-		ascii <= "110011";
 		wait until falling_edge(clk);
 		start_conv <= '1';
 		wait until falling_edge(clk);

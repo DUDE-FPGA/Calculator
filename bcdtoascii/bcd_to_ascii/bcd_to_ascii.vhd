@@ -51,8 +51,8 @@ begin
 		if reset='1' then
 			state_reg <= idle;
 			bcd_reg <= (others=>'0');
-			ascii_reg <= "000000";
-			--ascii_reg <= (others=>'0');
+			--ascii_reg <= "000000";
+			ascii_reg <= (others=>'0');
 			sign_reg <= '0';
 		elsif (clk'event and clk='1') then
 			state_reg <= state_next;
@@ -85,7 +85,7 @@ begin
 			if bcd_reg="1111" then --sign handle
 				sign_next <= '1';
 				ascii_next <= "101101"; --ascii input to return a negative sign handle
-				state_next <= done;
+				--state_next <= done;
 			elsif bcd_reg="0000" then ascii_next <= "110000";
 			elsif bcd_reg="0001" then ascii_next <= "110001";
 			elsif bcd_reg="0010" then ascii_next <= "110010";
