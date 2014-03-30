@@ -63,6 +63,7 @@ architecture fp32_2_bcd of fp32_to_bcd_32bit is
 	signal sign_reg, sign_next: std_logic;	
 begin
 	--state and register updates
+	--CONTROL process, acts simultaneously with calculation process below
 	process(clk, reset)
 	begin
 		if reset='1' then --Nullify registers
@@ -76,6 +77,29 @@ begin
 			bcd_reg <= bcd_next;
 			sign_reg <= sign_next;
 		end if;
+	end process;
+	--Data operation process 1
+	--sensitive to all regs being operated on, and input to-be-operated, and start_conv
+	process(state_reg, fp32_reg, bcd_reg, sign_reg, fp32)
+		begin
+			--preset everything
+			ready<='0'; --Its doing stuff now.
+			done_tick<='0'; --It's not done yet.
+			state_next <= state_reg;
+			fp32_next <= fp32_reg;
+			bcd_next <= bcd_reg;
+			sign_next <= sign_reg;
+		case state_reg is
+			when idle => --Accept input.
+				ready<='1';
+				if start_conv='1' then
+					fp32_next<=fp32;
+					state_next <= op;
+				end if;
+			
+				
+					
+	end case;
 	end process;
 		
 		
