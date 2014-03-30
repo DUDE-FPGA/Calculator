@@ -38,7 +38,7 @@ end fpu32;
 
 architecture fpu32_arch of fpu32 is
 	--Register definitions
-	type state_type is (idle, sort, done);
+	type state_type is (idle, sort, align, maths, done);
 	signal state_reg, state_next: state_type;
 	-- b - big, s - small, a - aligned, n - normalised
 	signal signb_reg, signb_next: std_logic;
@@ -139,7 +139,17 @@ begin
 					exps_next <= unsigned(fp1(30 downto 23));
 					fracs_next <= unsigned(fp1(22 downto 0));
 				end if;
-				state_next <= done;
+				state_next <= align;
+			when align =>
+				expdiff_next <= expb_reg - exps_reg;
+				fraca_next <= fracs_reg srl to_integer(expdiff_reg);
+				state_next <= maths;
+			when maths =>
+				if (signb_reg = signs_reg) then 
+					sum_next <= ('0' & fracb_reg) + ('0' & fraca_reg);
+				else sum_next <= ('0' & fracb_reg) - ('0' & fraca_reg);
+				end if;
+				state_ext <= done;
 			when done =>
 				done_tick <= '1';
 				state_next <= idle;
@@ -147,6 +157,7 @@ begin
 	end process;
 	--Outputs
 	--Debug - check if correctly sorting
-	fp_out <= signb_reg & std_logic_vector(expb_reg) & std_logic_vector(fracb_reg);
+	--fp_out <= signb_reg & std_logic_vector(expb_reg) & std_logic_vector(fracb_reg);
+	fp_out <= "000000000" & std_logic_vector(fraca_reg);
 end fpu32_arch;
 
