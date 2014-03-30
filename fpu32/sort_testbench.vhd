@@ -48,7 +48,8 @@ ARCHITECTURE behavior OF sort_testbench IS
          ready : OUT  std_logic;
          fp1 : IN  std_logic_vector(31 downto 0);
          fp2 : IN  std_logic_vector(31 downto 0);
-         fp_out : OUT  std_logic_vector(31 downto 0)
+         fp_out : OUT  std_logic_vector(31 downto 0);
+			debug_val : out std_logic_vector(22 downto 0)
         );
     END COMPONENT;
     
@@ -64,6 +65,7 @@ ARCHITECTURE behavior OF sort_testbench IS
    signal done_tick : std_logic;
    signal ready : std_logic;
    signal fp_out : std_logic_vector(31 downto 0);
+	signal debug_val : std_logic_vector(22 downto 0);
 
    -- Clock period definitions
    constant clk_period : time := 10 ns;
@@ -79,7 +81,8 @@ BEGIN
           ready => ready,
           fp1 => fp1,
           fp2 => fp2,
-          fp_out => fp_out
+          fp_out => fp_out,
+			 debug_val => debug_val
         );
 
    -- Clock process definitions
@@ -104,14 +107,27 @@ BEGIN
 		wait until falling_edge(clk);
 		start <= '1';
 		fp1 <= "01000000000000000000000000000000"; --2
+		fp2 <= "01000000000000000000000000000000"; --2
+		
+		wait for clk_period;
+		start <= '0';
+		wait for clk_period*10;
+		wait until falling_edge(clk);
+		wait until falling_edge(clk);
+		start <= '1';
+		fp1 <= "01000000101000000000000000000000"; --5
 		fp2 <= "01000000101000000000000000000000"; --5
-		--expect fp2
-		wait until falling_edge(clk);
-		wait until falling_edge(clk);
+		wait for clk_period;
+		start <= '0';
+		wait for clk_period*10;
+
+		start <= '1';
 		fp1 <= "01000001101000000000000000000000"; --20
-		fp2 <= "01000001001000000000000000000000"; --10
-		wait for clk_period*5;
-		--expect fp1
+		fp2 <= "01000010110010000000000000000000"; --100
+		wait for clk_period;
+		start <= '0';
+		wait for clk_period*10;
+
 		assert false
 		severity failure;
    end process;
