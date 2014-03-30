@@ -33,13 +33,14 @@ entity fpu32 is
     Port ( clk, reset, start : in  STD_LOGIC;
            done_tick, ready : out  STD_LOGIC;
 			  fp1, fp2 : in std_logic_vector(31 downto 0);
-			  fp_out : out std_logic_vector(31 downto 0));
+			  fp_out : out std_logic_vector(31 downto 0);
+			  debug_val : out std_logic_vector(7 downto 0));
 end fpu32;
 
 architecture fpu32_arch of fpu32 is
 	--Register definitions
-	type state_type is (idle, sort, align, maths, 
-						normalise1, normalise2, done);
+	type state_type is (idle, sort, align, maths, normalise1, 
+							  normalise2, normalise3, done);
 	signal state_reg, state_next: state_type;
 	-- b - big, s - small, a - aligned, n - normalised
 	signal signb_reg, signb_next: std_logic;
@@ -54,7 +55,7 @@ architecture fpu32_arch of fpu32 is
 	signal sumn_reg, sumn_next: unsigned(22 downto 0);
 	signal expdiff_reg, expdiff_next: unsigned(7 downto 0);
 	signal sum_reg, sum_next: unsigned(23 downto 0);
-	signal lead0_reg, lead0_next: unsigned(2 downto 0);
+	signal lead0_reg, lead0_next: unsigned(7 downto 0);
 begin
 	--Registers
 	process(clk, reset)
@@ -157,13 +158,19 @@ begin
 			when normalise1 =>
 				for i in 23 downto 0 loop
 					if sum_reg(i)='1' then
-						lead0_next <= to_unsigned(23 - i,3);
+						lead0_next <= to_unsigned(23 - i,8);
 					end if;
 					exit when sum_reg(i)='1';
 				end loop;
 				state_next <= normalise2;
 			-- Shift number based on leading 0's
 			when normalise2 =>
+				sumn_next <= sum_reg sll to_integer(lead0_reg);
+				state_next <= normalise3;
+			-- Prepare outputs
+			when normalise3 =>
+				expn_next <= expb_reg - lead0_reg;
+				fracn_next <= sumn_reg;
 				state_next <= done;
 			when done =>
 				done_tick <= '1';
@@ -173,6 +180,8 @@ begin
 	--Outputs
 	--Debug - check if correctly sorting
 	--fp_out <= signb_reg & std_logic_vector(expb_reg) & std_logic_vector(fracb_reg);
-	fp_out <= "00000000" & std_logic_vector(sum_reg);
+	
+	debug_val <= std_logic_vector(lead0_reg);
+	fp_out <= signb_reg & std_logic_vector(expn_reg) & std_logic_vector(fracn_reg);
 end fpu32_arch;
 
