@@ -153,7 +153,7 @@ begin
 					sum_next <= ('0' & fracb_reg) + ('0' & fraca_reg);
 				else sum_next <= ('0' & fracb_reg) - ('0' & fraca_reg);
 				end if;
-				state_next <= done;
+				state_next <= normalise1;
 			-- Count the leading 0's
 			when normalise1 =>
 				for i in 23 downto 0 loop
@@ -165,7 +165,7 @@ begin
 				state_next <= normalise2;
 			-- Shift number based on leading 0's
 			when normalise2 =>
-				sumn_next <= sum_reg sll to_integer(lead0_reg);
+				sumn_next <= sum_reg sll to_integer(lead0_reg); -- Issue here with logic left shift
 				state_next <= normalise3;
 			-- Prepare outputs
 			when normalise3 =>
@@ -180,7 +180,6 @@ begin
 	--Outputs
 	--Debug - check if correctly sorting
 	--fp_out <= signb_reg & std_logic_vector(expb_reg) & std_logic_vector(fracb_reg);
-	
 	debug_val <= std_logic_vector(lead0_reg);
 	fp_out <= signb_reg & std_logic_vector(expn_reg) & std_logic_vector(fracn_reg);
 end fpu32_arch;
