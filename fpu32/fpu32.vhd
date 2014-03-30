@@ -165,13 +165,21 @@ begin
 				state_next <= normalise2;
 			-- Shift number based on leading 0's
 			when normalise2 =>
-				sumn_next <= sum_reg(22 downto 0) sll to_integer(lead0_reg); -- Issue here with logic left shift
+				sumn_next <= sum_reg(22 downto 0) sll to_integer(lead0_reg);
 				state_next <= normalise3;
 			-- Prepare outputs
 			when normalise3 =>
-				expn_next <= expb_reg - lead0_reg;
-				fracn_next <= sumn_reg;
-				state_next <= done;
+				if sum_reg(23)='1' then -- Check for carry out
+					expn_next <= expb_reg + 1;
+					fracn_next <= sum_reg(23 downto 1);
+				elsif (lead0_reg > expb_reg) then -- Number too small
+					expn_next <= (others=>'0');
+					fracn_next <= (others=>'0');
+				else
+					expn_next <= expb_reg - lead0_reg;
+					fracn_next <= sumn_reg;
+					state_next <= done;
+				end if;
 			when done =>
 				done_tick <= '1';
 				state_next <= idle;
