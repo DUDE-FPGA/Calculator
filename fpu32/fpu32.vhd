@@ -34,12 +34,17 @@ entity fpu32 is
            done_tick, ready : out  STD_LOGIC;
 			  fp1, fp2 : in std_logic_vector(31 downto 0);
 			  fp_out : out std_logic_vector(31 downto 0);
-			  debug_val : out std_logic_vector(23 downto 0));
+			  debug_val : out std_logic_vector(22 downto 0);
+			  fracs, fracb, fraca, fracn : out std_logic_vector(22 downto 0);
+			  exps, expb, expn, expdiff : out std_logic_vector(7 downto 0);
+			  lead0 : out std_logic_vector(5 downto 0);
+			  sum : out std_logic_vector(23 downto 0);
+			  sumn : out std_logic_vector(22 downto 0));
 end fpu32;
 
 architecture fpu32_arch of fpu32 is
 	--Register definitions
-	type state_type is (idle, sort, align, maths, normalise1, 
+	type state_type is (idle, sort, align1, align2, maths, normalise1, 
 							  normalise2, normalise3, done);
 	signal state_reg, state_next: state_type;
 	-- b - big, s - small, a - aligned, n - normalised
@@ -141,10 +146,12 @@ begin
 					exps_next <= unsigned(fp1(30 downto 23));
 					fracs_next <= unsigned(fp1(22 downto 0));
 				end if;
-				state_next <= align;
+				state_next <= align1;
 			-- Align smaller number with bigger number
-			when align =>
+			when align1 =>
 				expdiff_next <= expb_reg - exps_reg;
+				state_next <= align2;
+			when align2 =>
 				fraca_next <= fracs_reg srl to_integer(expdiff_reg);
 				state_next <= maths;
 			-- Add or subtract based on signs of the numbers
@@ -188,7 +195,17 @@ begin
 	--Outputs
 	--Debug - check if correctly sorting
 	--fp_out <= signb_reg & std_logic_vector(expb_reg) & std_logic_vector(fracb_reg);
-	debug_val <= std_logic_vector(sum_reg);
+	--Output ALL the things
+	fracs <= std_logic_vector(fracs_reg);
+	fracb <= std_logic_vector(fracb_reg);
+	fraca <= std_logic_vector(fraca_reg);
+	fracn <= std_logic_vector(fracn_reg);
+	exps <= std_logic_vector(exps_reg);
+	expb <= std_logic_vector(expb_reg);
+	expn <= std_logic_vector(expn_reg);
+	expdiff <= std_logic_vector(expdiff_reg);
+	sum <= std_logic_vector(sum_reg);
+	sumn <= std_logic_vector(sumn_reg);
 	fp_out <= signb_reg & std_logic_vector(expn_reg) & std_logic_vector(fracn_reg);
 end fpu32_arch;
 
