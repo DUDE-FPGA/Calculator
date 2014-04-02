@@ -152,13 +152,13 @@ begin
 				expdiff_next <= expb_reg - exps_reg;
 				state_next <= align2;
 			when align2 =>
-				fraca_next <= fracs_reg srl to_integer(expdiff_reg);
+				fraca_next <= ('1' & fracs_reg(22 downto 1)) srl to_integer(expdiff_reg - 1);
 				state_next <= maths;
 			-- Add or subtract based on signs of the numbers
 			when maths =>
 				if (signb_reg = signs_reg) then 
-					sum_next <= ('0' & fracb_reg) + ('0' & fraca_reg); -- Adding correctly
-				else sum_next <= ('0' & fracb_reg) - ('0' & fraca_reg);
+					sum_next <= ('0' & fracb_reg) + ('0' & fraca_reg(21 downto 0));
+				else sum_next <= ('0' & fracb_reg) - ('0' & fraca_reg(21 downto 0));
 				end if;
 				state_next <= normalise1;
 			-- Count the leading 0's
@@ -204,6 +204,7 @@ begin
 	expb <= std_logic_vector(expb_reg);
 	expn <= std_logic_vector(expn_reg);
 	expdiff <= std_logic_vector(expdiff_reg);
+	lead0 <= std_logic_vector(lead0_reg);
 	sum <= std_logic_vector(sum_reg);
 	sumn <= std_logic_vector(sumn_reg);
 	fp_out <= signb_reg & std_logic_vector(expn_reg) & std_logic_vector(fracn_reg);
