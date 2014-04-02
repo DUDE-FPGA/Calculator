@@ -152,8 +152,13 @@ begin
 				expdiff_next <= expb_reg - exps_reg;
 				state_next <= align2;
 			when align2 =>
-				fraca_next <= ('1' & fracs_reg(22 downto 1)) srl to_integer(expdiff_reg - 1);
+				if expdiff_reg <= "00000000" then
+					fraca_next <= fracs_reg;
+				else
+					fraca_next <= ('1' & fracs_reg(22 downto 1)) srl to_integer(expdiff_reg - 1);
+				end if;
 				state_next <= maths;
+
 			-- Add or subtract based on signs of the numbers
 			when maths =>
 				if (signb_reg = signs_reg) then 
