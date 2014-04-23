@@ -162,7 +162,7 @@ begin
 			-- Check position of MSB
 			when normalise1 =>
 				if (sum_reg(24) = '1') then
-					sumn_next <= sum_reg(24 downto 1) srl 1;
+					sumn_next <= sum_reg(23 downto 0) srl 1;
 					expn_next <= expb_reg + "00000001";
 				else
 					sumn_next <= sum_reg(23 downto 0);
