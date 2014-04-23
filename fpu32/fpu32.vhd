@@ -47,13 +47,13 @@ architecture fpu32_arch of fpu32 is
 	signal expb_reg, expb_next: unsigned(7 downto 0);
 	signal exps_reg, exps_next: unsigned(7 downto 0);
 	signal expn_reg, expn_next: unsigned(7 downto 0);
-	signal fracb_reg, fracb_next: unsigned(22 downto 0);
-	signal fracs_reg, fracs_next: unsigned(22 downto 0);
-	signal fraca_reg, fraca_next: unsigned(22 downto 0);
+	signal fracb_reg, fracb_next: unsigned(23 downto 0);
+	signal fracs_reg, fracs_next: unsigned(23 downto 0);
+	signal fraca_reg, fraca_next: unsigned(23 downto 0);
 	signal fracn_reg, fracn_next: unsigned(22 downto 0);
 	signal sumn_reg, sumn_next: unsigned(22 downto 0);
 	signal expdiff_reg, expdiff_next: unsigned(7 downto 0);
-	signal sum_reg, sum_next: unsigned(23 downto 0);
+	signal sum_reg, sum_next: unsigned(24 downto 0);
 	signal lead0_reg, lead0_next: unsigned(5 downto 0);
 begin
 	--Registers
@@ -128,17 +128,17 @@ begin
 				if fp1(30 downto 0) > fp2(30 downto 0) then
 					signb_next <= fp1(31);
 					expb_next <= unsigned(fp1(30 downto 23));
-					fracb_next <= unsigned(fp1(22 downto 0));
+					fracb_next <= '1' & unsigned(fp1(22 downto 0));
 					signs_next <= fp2(31);
 					exps_next <= unsigned(fp2(30 downto 23));
-					fracs_next <= unsigned(fp2(22 downto 0));
+					fracs_next <= '1' & unsigned(fp2(22 downto 0));
 				else
 					signb_next <= fp2(31);
 					expb_next <= unsigned(fp2(30 downto 23));
-					fracb_next <= unsigned(fp2(22 downto 0));
+					fracb_next <= '1' & unsigned(fp2(22 downto 0));
 					signs_next <= fp1(31);
 					exps_next <= unsigned(fp1(30 downto 23));
-					fracs_next <= unsigned(fp1(22 downto 0));
+					fracs_next <= '1' & unsigned(fp1(22 downto 0));
 				end if;
 				state_next <= align1;
 			-- Align smaller number with bigger number
@@ -149,7 +149,7 @@ begin
 				if expdiff_reg <= "00000000" then
 					fraca_next <= fracs_reg;
 				else
-					fraca_next <= ('1' & fracs_reg(22 downto 1)) srl to_integer(expdiff_reg - 1);
+					fraca_next <= (fracs_reg(23 downto 0)) srl to_integer(expdiff_reg);
 				end if;
 			state_next <= maths;
 			-- Add or subtract based on signs of the numbers
