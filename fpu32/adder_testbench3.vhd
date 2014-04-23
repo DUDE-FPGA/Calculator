@@ -2,9 +2,9 @@
 -- Company: 
 -- Engineer:
 --
--- Create Date:   18:08:45 03/29/2014
+-- Create Date:   14:45:01 04/19/2014
 -- Design Name:   
--- Module Name:   C:/Users/Vladimir/Documents/GitHub/Calculator/fpu32/sort_testbench.vhd
+-- Module Name:   C:/Users/Vladimir/Documents/GitHub/Calculator/fpu32/adder_testbench3.vhd
 -- Project Name:  fpu32
 -- Target Device:  
 -- Tool versions:  
@@ -32,10 +32,10 @@ USE ieee.std_logic_1164.ALL;
 -- arithmetic functions with Signed or Unsigned values
 --USE ieee.numeric_std.ALL;
  
-ENTITY sort_testbench IS
-END sort_testbench;
+ENTITY adder_testbench3 IS
+END adder_testbench3;
  
-ARCHITECTURE behavior OF sort_testbench IS 
+ARCHITECTURE behavior OF adder_testbench3 IS 
  
     -- Component Declaration for the Unit Under Test (UUT)
  
@@ -85,32 +85,22 @@ BEGIN
    -- Clock process definitions
    clk_process :process
    begin
-		clk <= '0';
-		wait for clk_period/2;
-		clk <= '1';
-		wait for clk_period/2;
-   end process;
- 
-
-   -- Stimulus process
-   stim_proc: process
-   begin		
       -- hold reset state for 100 ns.
 		reset <= '1';
 		wait for clk_period;
 		reset <= '0';
-		wait for clk_period;
-		wait until falling_edge(clk);
-		wait until falling_edge(clk);
-		start <= '1';
-		fp1 <= "01000000000000000000000000000000"; --2
-		fp2 <= "01000000000000000000000000000000"; --2
-		
-		wait for clk_period;
-		start <= '0';
-		wait for clk_period*10;
-		wait until falling_edge(clk);
-		wait until falling_edge(clk);
+--		wait for clk_period;
+--		wait until falling_edge(clk);
+--		wait until falling_edge(clk);
+--		start <= '1';
+--		fp1 <= "01000000000000000000000000000000"; --2
+--		fp2 <= "01000000000000000000000000000000"; --2
+--		
+--		wait for clk_period;
+--		start <= '0';
+--		wait for clk_period*10;
+--		wait until falling_edge(clk);
+--		wait until falling_edge(clk);
 		start <= '1';
 		fp1 <= "01000000101000000000000000000000"; --5
 		fp2 <= "01000000101000000000000000000000"; --5

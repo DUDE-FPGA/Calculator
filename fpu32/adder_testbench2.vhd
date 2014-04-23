@@ -2,9 +2,9 @@
 -- Company: 
 -- Engineer:
 --
--- Create Date:   18:08:45 03/29/2014
+-- Create Date:   14:59:33 04/19/2014
 -- Design Name:   
--- Module Name:   C:/Users/Vladimir/Documents/GitHub/Calculator/fpu32/sort_testbench.vhd
+-- Module Name:   C:/Users/Vladimir/Documents/GitHub/Calculator/fpu32/adder_testbench2.vhd
 -- Project Name:  fpu32
 -- Target Device:  
 -- Tool versions:  
@@ -32,10 +32,10 @@ USE ieee.std_logic_1164.ALL;
 -- arithmetic functions with Signed or Unsigned values
 --USE ieee.numeric_std.ALL;
  
-ENTITY sort_testbench IS
-END sort_testbench;
+ENTITY adder_testbench2 IS
+END adder_testbench2;
  
-ARCHITECTURE behavior OF sort_testbench IS 
+ARCHITECTURE behavior OF adder_testbench2 IS 
  
     -- Component Declaration for the Unit Under Test (UUT)
  
@@ -48,7 +48,19 @@ ARCHITECTURE behavior OF sort_testbench IS
          ready : OUT  std_logic;
          fp1 : IN  std_logic_vector(31 downto 0);
          fp2 : IN  std_logic_vector(31 downto 0);
-         fp_out : OUT  std_logic_vector(31 downto 0)
+         fp_out : OUT  std_logic_vector(31 downto 0);
+         debug_val : OUT  std_logic_vector(22 downto 0);
+         fracs : OUT  std_logic_vector(22 downto 0);
+         fracb : OUT  std_logic_vector(22 downto 0);
+         fraca : OUT  std_logic_vector(22 downto 0);
+         fracn : OUT  std_logic_vector(22 downto 0);
+         exps : OUT  std_logic_vector(7 downto 0);
+         expb : OUT  std_logic_vector(7 downto 0);
+         expn : OUT  std_logic_vector(7 downto 0);
+         expdiff : OUT  std_logic_vector(7 downto 0);
+         lead0 : OUT  std_logic_vector(5 downto 0);
+         sum : OUT  std_logic_vector(23 downto 0);
+         sumn : OUT  std_logic_vector(22 downto 0)
         );
     END COMPONENT;
     
@@ -64,6 +76,18 @@ ARCHITECTURE behavior OF sort_testbench IS
    signal done_tick : std_logic;
    signal ready : std_logic;
    signal fp_out : std_logic_vector(31 downto 0);
+   signal debug_val : std_logic_vector(22 downto 0);
+   signal fracs : std_logic_vector(22 downto 0);
+   signal fracb : std_logic_vector(22 downto 0);
+   signal fraca : std_logic_vector(22 downto 0);
+   signal fracn : std_logic_vector(22 downto 0);
+   signal exps : std_logic_vector(7 downto 0);
+   signal expb : std_logic_vector(7 downto 0);
+   signal expn : std_logic_vector(7 downto 0);
+   signal expdiff : std_logic_vector(7 downto 0);
+   signal lead0 : std_logic_vector(5 downto 0);
+   signal sum : std_logic_vector(23 downto 0);
+   signal sumn : std_logic_vector(22 downto 0);
 
    -- Clock period definitions
    constant clk_period : time := 10 ns;
@@ -79,7 +103,19 @@ BEGIN
           ready => ready,
           fp1 => fp1,
           fp2 => fp2,
-          fp_out => fp_out
+          fp_out => fp_out,
+          debug_val => debug_val,
+          fracs => fracs,
+          fracb => fracb,
+          fraca => fraca,
+          fracn => fracn,
+          exps => exps,
+          expb => expb,
+          expn => expn,
+          expdiff => expdiff,
+          lead0 => lead0,
+          sum => sum,
+          sumn => sumn
         );
 
    -- Clock process definitions
@@ -100,11 +136,6 @@ BEGIN
 		wait for clk_period;
 		reset <= '0';
 		wait for clk_period;
-		wait until falling_edge(clk);
-		wait until falling_edge(clk);
-		start <= '1';
-		fp1 <= "01000000000000000000000000000000"; --2
-		fp2 <= "01000000000000000000000000000000"; --2
 		
 		wait for clk_period;
 		start <= '0';

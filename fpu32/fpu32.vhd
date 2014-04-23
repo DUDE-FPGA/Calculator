@@ -33,13 +33,7 @@ entity fpu32 is
     Port ( clk, reset, start : in  STD_LOGIC;
            done_tick, ready : out  STD_LOGIC;
 			  fp1, fp2 : in std_logic_vector(31 downto 0);
-			  fp_out : out std_logic_vector(31 downto 0);
-			  debug_val : out std_logic_vector(22 downto 0);
-			  fracs, fracb, fraca, fracn : out std_logic_vector(22 downto 0);
-			  exps, expb, expn, expdiff : out std_logic_vector(7 downto 0);
-			  lead0 : out std_logic_vector(5 downto 0);
-			  sum : out std_logic_vector(23 downto 0);
-			  sumn : out std_logic_vector(22 downto 0));
+			  fp_out : out std_logic_vector(31 downto 0));
 end fpu32;
 
 architecture fpu32_arch of fpu32 is
@@ -152,13 +146,17 @@ begin
 				expdiff_next <= expb_reg - exps_reg;
 				state_next <= align2;
 			when align2 =>
-				fraca_next <= fracs_reg srl to_integer(expdiff_reg);
-				state_next <= maths;
+				if expdiff_reg <= "00000000" then
+					fraca_next <= fracs_reg;
+				else
+					fraca_next <= ('1' & fracs_reg(22 downto 1)) srl to_integer(expdiff_reg - 1);
+				end if;
+			state_next <= maths;
 			-- Add or subtract based on signs of the numbers
 			when maths =>
 				if (signb_reg = signs_reg) then 
-					sum_next <= ('0' & fracb_reg) + ('0' & fraca_reg); -- Adding correctly
-				else sum_next <= ('0' & fracb_reg) - ('0' & fraca_reg);
+					sum_next <= ('0' & fracb_reg) + ('0' & fraca_reg(21 downto 0));
+				else sum_next <= ('0' & fracb_reg) - ('0' & fraca_reg(21 downto 0));
 				end if;
 				state_next <= normalise1;
 			-- Count the leading 0's
@@ -172,7 +170,7 @@ begin
 				state_next <= normalise2;
 			-- Shift number based on leading 0's
 			when normalise2 =>
-				sumn_next <= sum_reg(22 downto 0) sll to_integer(lead0_reg);
+				sumn_next <= sum_reg(22 downto 0) sll (to_integer(lead0_reg) - 1);
 				state_next <= normalise3;
 			-- Prepare outputs
 			when normalise3 =>
@@ -195,17 +193,6 @@ begin
 	--Outputs
 	--Debug - check if correctly sorting
 	--fp_out <= signb_reg & std_logic_vector(expb_reg) & std_logic_vector(fracb_reg);
-	--Output ALL the things
-	fracs <= std_logic_vector(fracs_reg);
-	fracb <= std_logic_vector(fracb_reg);
-	fraca <= std_logic_vector(fraca_reg);
-	fracn <= std_logic_vector(fracn_reg);
-	exps <= std_logic_vector(exps_reg);
-	expb <= std_logic_vector(expb_reg);
-	expn <= std_logic_vector(expn_reg);
-	expdiff <= std_logic_vector(expdiff_reg);
-	sum <= std_logic_vector(sum_reg);
-	sumn <= std_logic_vector(sumn_reg);
 	fp_out <= signb_reg & std_logic_vector(expn_reg) & std_logic_vector(fracn_reg);
 end fpu32_arch;
 
