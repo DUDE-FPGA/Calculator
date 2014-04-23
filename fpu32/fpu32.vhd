@@ -51,7 +51,7 @@ architecture fpu32_arch of fpu32 is
 	signal fracs_reg, fracs_next: unsigned(23 downto 0);
 	signal fraca_reg, fraca_next: unsigned(23 downto 0);
 	signal fracn_reg, fracn_next: unsigned(22 downto 0);
-	signal sumn_reg, sumn_next: unsigned(22 downto 0);
+	signal sumn_reg, sumn_next: unsigned(23 downto 0);
 	signal expdiff_reg, expdiff_next: unsigned(7 downto 0);
 	signal sum_reg, sum_next: unsigned(24 downto 0);
 	signal lead0_reg, lead0_next: unsigned(5 downto 0);
@@ -149,42 +149,33 @@ begin
 				if expdiff_reg <= "00000000" then
 					fraca_next <= fracs_reg;
 				else
-					fraca_next <= (fracs_reg(23 downto 0)) srl to_integer(expdiff_reg);
+					fraca_next <= fracs_reg srl to_integer(expdiff_reg);
 				end if;
 			state_next <= maths;
 			-- Add or subtract based on signs of the numbers
 			when maths =>
 				if (signb_reg = signs_reg) then 
-					sum_next <= ('0' & fracb_reg) + ('0' & fraca_reg(21 downto 0));
-				else sum_next <= ('0' & fracb_reg) - ('0' & fraca_reg(21 downto 0));
+					sum_next <= ('0' & fracb_reg) + ('0' & fraca_reg);
+				else sum_next <= ('0' & fracb_reg) - ('0' & fraca_reg);
 				end if;
 				state_next <= normalise1;
-			-- Count the leading 0's
+			-- Check position of MSB
 			when normalise1 =>
-				for i in 0 to 22 loop
-					if sum_reg(22-i)='1' then
-						lead0_next <= to_unsigned(i,6);
-					end if;
-					exit when sum_reg(i)='1';
-				end loop;
+				if (sum_reg(24) = '1') then
+					sumn_next <= sum_reg(24 downto 1) srl 1;
+					expn_next <= expb_reg + "00000001";
+				else
+					sumn_next <= sum_reg(23 downto 0);
+					expn_next <= expb_reg;
+				end if;
 				state_next <= normalise2;
-			-- Shift number based on leading 0's
 			when normalise2 =>
-				sumn_next <= sum_reg(22 downto 0) sll (to_integer(lead0_reg) - 1);
+				fracn_next <= sumn_reg(22 downto 0);
 				state_next <= normalise3;
 			-- Prepare outputs
 			when normalise3 =>
-				if sum_reg(23)='1' then -- Check for carry out
-					expn_next <= expb_reg + 2;
-					fracn_next <= sum_reg(23 downto 1);
-				elsif (lead0_reg > expb_reg) then -- Number too small
-					expn_next <= (others=>'0');
-					fracn_next <= (others=>'0');
-				else
-					expn_next <= expb_reg - lead0_reg + 1;
-					fracn_next <= sumn_reg;
-					state_next <= done;
-				end if;
+				state_next <= done;
+
 			when done =>
 				done_tick <= '1';
 				state_next <= idle;
