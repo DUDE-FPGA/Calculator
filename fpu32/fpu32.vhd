@@ -164,16 +164,25 @@ begin
 				if (sum_reg(24) = '1') then
 					sumn_next <= sum_reg(23 downto 0) srl 1;
 					expn_next <= expb_reg + "00000001";
+				elsif (sum_reg(24 downto 23) = "00") then
+					for i in 0 to 22 loop
+						if sum_reg(23-i)='1' then
+							lead0_next <= to_unsigned(i,6);
+						end if;
+						exit when sum_reg(i)='1';
+					end loop;
+					state_next <= normalise2;
 				else
 					sumn_next <= sum_reg(23 downto 0);
 					expn_next <= expb_reg;
 				end if;
-				state_next <= normalise2;
+				state_next <= normalise3;
 			when normalise2 =>
-				fracn_next <= sumn_reg(22 downto 0);
+				sumn_next <= sum_reg(23 downto 0) sll to_integer(lead0_reg);
 				state_next <= normalise3;
 			-- Prepare outputs
 			when normalise3 =>
+				fracn_next <= sumn_reg(22 downto 0);
 				state_next <= done;
 
 			when done =>
