@@ -115,6 +115,23 @@ begin
 		expdiff_next <= expdiff_reg;
 		sum_next <= sum_reg;
 		lead0_next <= lead0_reg;
+		
+		case state_reg is 
+			when idle =>
+				state_next <= sort;
+			when sort =>
+				state_next <= align;
+			when align =>
+				state_next <= maths;
+			when maths =>
+				state_next <= normalise;
+			when normalise =>
+				state_next <= output;
+			when output =>
+				state_next <= done;
+			when done =>
+				state_next <= idle;
+		end case;
 	
 	end process;
 
