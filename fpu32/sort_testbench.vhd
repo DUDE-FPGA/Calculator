@@ -48,8 +48,7 @@ ARCHITECTURE behavior OF sort_testbench IS
          ready : OUT  std_logic;
          fp1 : IN  std_logic_vector(31 downto 0);
          fp2 : IN  std_logic_vector(31 downto 0);
-         fp_out : OUT  std_logic_vector(31 downto 0);
-			debug_val : out std_logic_vector(22 downto 0)
+         fp_out : OUT  std_logic_vector(31 downto 0)
         );
     END COMPONENT;
     
@@ -65,7 +64,6 @@ ARCHITECTURE behavior OF sort_testbench IS
    signal done_tick : std_logic;
    signal ready : std_logic;
    signal fp_out : std_logic_vector(31 downto 0);
-	signal debug_val : std_logic_vector(22 downto 0);
 
    -- Clock period definitions
    constant clk_period : time := 10 ns;
@@ -81,8 +79,7 @@ BEGIN
           ready => ready,
           fp1 => fp1,
           fp2 => fp2,
-          fp_out => fp_out,
-			 debug_val => debug_val
+          fp_out => fp_out
         );
 
    -- Clock process definitions
@@ -127,7 +124,13 @@ BEGIN
 		wait for clk_period;
 		start <= '0';
 		wait for clk_period*10;
-
+		start <= '1';
+		fp1 <= "01000000000000000000000000000000"; --2
+		fp2 <= "00111110100000000000000000000000"; --0.25
+		wait for clk_period;
+		start <= '0';
+		wait for clk_period*10;
+		
 		assert false
 		severity failure;
    end process;

@@ -2,9 +2,9 @@
 -- Company: 
 -- Engineer:
 --
--- Create Date:   16:58:19 03/30/2014
+-- Create Date:   11:58:34 04/24/2014
 -- Design Name:   
--- Module Name:   C:/Users/Vladimir/Documents/GitHub/Calculator/fpu32/adder_testbench.vhd
+-- Module Name:   C:/Users/Vladimir/Documents/GitHub/Calculator/fpu32/sub_testbench.vhd
 -- Project Name:  fpu32
 -- Target Device:  
 -- Tool versions:  
@@ -32,10 +32,10 @@ USE ieee.std_logic_1164.ALL;
 -- arithmetic functions with Signed or Unsigned values
 --USE ieee.numeric_std.ALL;
  
-ENTITY adder_testbench IS
-END adder_testbench;
+ENTITY sub_testbench IS
+END sub_testbench;
  
-ARCHITECTURE behavior OF adder_testbench IS 
+ARCHITECTURE behavior OF sub_testbench IS 
  
     -- Component Declaration for the Unit Under Test (UUT)
  
@@ -48,19 +48,7 @@ ARCHITECTURE behavior OF adder_testbench IS
          ready : OUT  std_logic;
          fp1 : IN  std_logic_vector(31 downto 0);
          fp2 : IN  std_logic_vector(31 downto 0);
-         fp_out : OUT  std_logic_vector(31 downto 0);
-         debug_val : OUT  std_logic_vector(22 downto 0);
-         fracs : OUT  std_logic_vector(22 downto 0);
-         fracb : OUT  std_logic_vector(22 downto 0);
-         fraca : OUT  std_logic_vector(22 downto 0);
-         fracn : OUT  std_logic_vector(22 downto 0);
-         exps : OUT  std_logic_vector(7 downto 0);
-         expb : OUT  std_logic_vector(7 downto 0);
-         expn : OUT  std_logic_vector(7 downto 0);
-         expdiff : OUT  std_logic_vector(7 downto 0);
-         lead0 : OUT  std_logic_vector(5 downto 0);
-         sum : OUT  std_logic_vector(23 downto 0);
-         sumn : OUT  std_logic_vector(22 downto 0)
+         fp_out : OUT  std_logic_vector(31 downto 0)
         );
     END COMPONENT;
     
@@ -76,18 +64,6 @@ ARCHITECTURE behavior OF adder_testbench IS
    signal done_tick : std_logic;
    signal ready : std_logic;
    signal fp_out : std_logic_vector(31 downto 0);
-   signal debug_val : std_logic_vector(22 downto 0);
-   signal fracs : std_logic_vector(22 downto 0);
-   signal fracb : std_logic_vector(22 downto 0);
-   signal fraca : std_logic_vector(22 downto 0);
-   signal fracn : std_logic_vector(22 downto 0);
-   signal exps : std_logic_vector(7 downto 0);
-   signal expb : std_logic_vector(7 downto 0);
-   signal expn : std_logic_vector(7 downto 0);
-   signal expdiff : std_logic_vector(7 downto 0);
-   signal lead0 : std_logic_vector(5 downto 0);
-   signal sum : std_logic_vector(23 downto 0);
-   signal sumn : std_logic_vector(22 downto 0);
 
    -- Clock period definitions
    constant clk_period : time := 10 ns;
@@ -103,19 +79,7 @@ BEGIN
           ready => ready,
           fp1 => fp1,
           fp2 => fp2,
-          fp_out => fp_out,
-          debug_val => debug_val,
-          fracs => fracs,
-          fracb => fracb,
-          fraca => fraca,
-          fracn => fracn,
-          exps => exps,
-          expb => expb,
-          expn => expn,
-          expdiff => expdiff,
-          lead0 => lead0,
-          sum => sum,
-          sumn => sumn
+          fp_out => fp_out
         );
 
    -- Clock process definitions
@@ -135,32 +99,55 @@ BEGIN
 		reset <= '1';
 		wait for clk_period;
 		reset <= '0';
---		wait for clk_period;
---		wait until falling_edge(clk);
---		wait until falling_edge(clk);
---		start <= '1';
---		fp1 <= "01000000000000000000000000000000"; --2
---		fp2 <= "01000000000000000000000000000000"; --2
---		
---		wait for clk_period;
---		start <= '0';
---		wait for clk_period*10;
---		wait until falling_edge(clk);
---		wait until falling_edge(clk);
+		wait for clk_period;
+		wait until falling_edge(clk);
+		wait until falling_edge(clk);
 		start <= '1';
-		fp1 <= "01000000101000000000000000000000"; --5
-		fp2 <= "01000000101000000000000000000000"; --5
+		fp1 <= "11000000000000000000000000000000"; -- -2
+		fp2 <= "01000000101000000000000000000000"; -- +5
+		
 		wait for clk_period;
 		start <= '0';
 		wait for clk_period*10;
-
+		reset <= '1';
+		wait for clk_period;
+		reset <= '0';
+		wait until falling_edge(clk);
+		wait until falling_edge(clk);
+		
 		start <= '1';
-		fp1 <= "01000001101000000000000000000000"; --20
-		fp2 <= "01000010110010000000000000000000"; --100
+		fp1 <= "11000000101000000000000000000000"; -- -5
+		fp2 <= "01000000000000000000000000000000"; -- +2
+		
 		wait for clk_period;
 		start <= '0';
 		wait for clk_period*10;
-
+		reset <= '1';
+		wait for clk_period;
+		reset <= '0';
+		wait until falling_edge(clk);
+		wait until falling_edge(clk);
+		
+		start <= '1';
+		fp1 <= "01000010111100000000000000000000"; -- +120
+		fp2 <= "11000001101000000000000000000000"; -- -20
+		
+		wait for clk_period;
+		start <= '0';
+		wait for clk_period*10;
+		reset <= '1';
+		wait for clk_period;
+		reset <= '0';
+		wait until falling_edge(clk);
+		wait until falling_edge(clk);
+		
+		start <= '1';
+		fp1 <= "00111111110000000000000000000000"; -- +1.5
+		fp2 <= "10111111000000000000000000000000"; -- -0.5
+		
+		wait for clk_period;
+		start <= '0';
+		wait for clk_period*10;
 		assert false
 		severity failure;
    end process;
