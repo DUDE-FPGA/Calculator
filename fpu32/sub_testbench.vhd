@@ -113,7 +113,7 @@ BEGIN
 		wait until falling_edge(clk);
 		start <= '1';
 		fp1 <= "11000000101000000000000000000000"; -- -5
-		fp1 <= "01000000000000000000000000000000"; -- +2
+		fp2 <= "01000000000000000000000000000000"; -- +2
 		wait for clk_period;
 		start <= '0';
 		wait for clk_period*10;

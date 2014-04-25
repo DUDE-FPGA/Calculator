@@ -165,20 +165,22 @@ begin
 					sumn_next <= sum_reg(23 downto 0) srl 1;
 					expn_next <= expb_reg + "00000001";
 				elsif (sum_reg(24 downto 23) = "00") then
-					for i in 0 to 22 loop
+					for i in 0 to 23 loop
 						if sum_reg(23-i)='1' then
-							lead0_next <= to_unsigned(i,6);
+							lead0_next <= to_unsigned(i,6) - "000001";
 						end if;
 						exit when sum_reg(i)='1';
 					end loop;
-					state_next <= normalise2;
 				else
 					sumn_next <= sum_reg(23 downto 0);
 					expn_next <= expb_reg;
 				end if;
-				state_next <= normalise3;
+				state_next <= normalise2;
 			when normalise2 =>
-				sumn_next <= sum_reg(23 downto 0) sll to_integer(lead0_reg);
+				if (lead0_reg > "000000") then
+					sumn_next <= sum_reg(23 downto 0) sll to_integer(lead0_reg);
+					expn_next <= expb_reg - ("00" & lead0_reg);
+				end if;
 				state_next <= normalise3;
 			-- Prepare outputs
 			when normalise3 =>
