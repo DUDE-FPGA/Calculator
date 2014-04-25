@@ -109,11 +109,42 @@ BEGIN
 		wait for clk_period;
 		start <= '0';
 		wait for clk_period*10;
+		reset <= '1';
+		wait for clk_period;
+		reset <= '0';
 		wait until falling_edge(clk);
 		wait until falling_edge(clk);
+		
 		start <= '1';
 		fp1 <= "11000000101000000000000000000000"; -- -5
 		fp2 <= "01000000000000000000000000000000"; -- +2
+		
+		wait for clk_period;
+		start <= '0';
+		wait for clk_period*10;
+		reset <= '1';
+		wait for clk_period;
+		reset <= '0';
+		wait until falling_edge(clk);
+		wait until falling_edge(clk);
+		
+		start <= '1';
+		fp1 <= "01000010111100000000000000000000"; -- +120
+		fp2 <= "11000001101000000000000000000000"; -- -20
+		
+		wait for clk_period;
+		start <= '0';
+		wait for clk_period*10;
+		reset <= '1';
+		wait for clk_period;
+		reset <= '0';
+		wait until falling_edge(clk);
+		wait until falling_edge(clk);
+		
+		start <= '1';
+		fp1 <= "00111111110000000000000000000000"; -- +1.5
+		fp2 <= "10111111000000000000000000000000"; -- -0.5
+		
 		wait for clk_period;
 		start <= '0';
 		wait for clk_period*10;
