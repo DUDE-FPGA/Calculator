@@ -35,7 +35,7 @@ package bcd_def is
   subtype unsdigit is unsigned(3 downto 0); -- 4 bits unsigned
   type bcdOP is array (39 downto 0) of unsdigit; -- unsigned bcd for operations
 end;
- 
+
 use work.bcd_def.all;
 
 LIBRARY ieee;
@@ -148,8 +148,8 @@ begin
 					--Here we begin the Crazy algorithm. Will try to load it all into a loop here, but it may need an FSMD state of its own.
 					--____________________________________________________________
 					
-					-- 23 bit input, therefore 23 shifts
-					for i in 22 downto 0 loop
+					-- 24 bit input, therefore 24 shifts
+					for i in 23 downto 0 loop
 						-- left shift 1 - unnecessary, can just use loop ID to pull the bits from the mantissa
 						-- loop should finish at the end of the dataset, therfore need first 1 from the RHS
 						-- This is hard. Take the first bit of every set of 4 and shift it into the rhs of the one above
@@ -159,25 +159,32 @@ begin
 							bcdOPdat(j)<=bcdOPdat(j) sll 1; -- left shift 1
 							bcdOPdat(j)(0)<=bcdOPdat(j-1)(3); -- Assign bit from next one along to right-most digit
 						end loop;
-						-- Draw final digit from mantissa
+						-- Draw digit from mantissa
 						bcdOPdat(0)<=bcdOPdat(0) sll 1;
-						bcdOPdat(0)(0)<=fp32_mantissa(22);
+						bcdOPdat(0)(0)<=fp32_mantissa(i);
 						--Check all digit subsets :S
-						--If > 4 then add 3. If that makes
+						--If > 4 then add 3.
+						for j in 39 downto 0 loop
+							if bcdOPdat(j) > 4 then
+								bcdOPdat(j)<=bcdOPdat(j)+"0011";
+							end if;
+						end loop;
 						
 					end loop;
 				else --Number is < 1, > 0
 				
 				end if;
+				
+				state_next<=done;
+			when done =>
 				for i in 39 downto 0 loop
 					bcd_next(i)<=std_logic_vector(bcdOPdat(i));
 				end loop;
-				state_next<=done;
-			when done =>
 				done_tick <= '1';
 				state_next <= idle;
 	end case;
 	end process;
-
+	bcds <= bcd_reg;
+	sign <= sign_reg;
 end fp32bcd;
 
