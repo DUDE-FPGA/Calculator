@@ -51,11 +51,13 @@ entity fp32_to_bcd_32bit is
 					--type dataout is array (39 downto 0) of std_logic_vector(3 downto 0);
 					--bcds : dataout;
 			  bcd : out STD_LOGIC_VECTOR(159 downto 0);--40*4=160
+			  DEBUGConvData: out unsigned(183 downto 0);
            sign : out  STD_LOGIC -- 1 bit, as a check value
 			  );
 end fp32_to_bcd_32bit;
 
 architecture fp32_2_bcd of fp32_to_bcd_32bit is
+
 	type state_type is (idle, fp32tobcd, done);
 	signal state_reg, state_next: state_type;
 	signal fp32_reg, fp32_next: std_logic_vector(31 downto 0);
@@ -87,96 +89,98 @@ architecture fp32_2_bcd of fp32_to_bcd_32bit is
 	end function;
 
 begin
-	--state and register updates
-	--CONTROL process, acts simultaneously with calculation process below
-	process(clk, reset)
-	begin
-		if reset='1' then --Nullify registers
-			state_reg <= idle;
-			fp32_reg <= (others=>'0');
-			bcd_reg <= (others=>'0');
-			sign_reg <= '0';
-		elsif (clk'event and clk='1') then --Update registers
-			state_reg <= state_next;
-			fp32_reg <= fp32_next;
-			bcd_reg <= bcd_next;
-			sign_reg <= sign_next;
-		end if;
-	end process;
-	--Data operation process 1 - sign set - nvm i'll ask on monday, i've put everything in here
-	--sensitive to all regs being operated on, and input to-be-operated, and start_conv
-	process(state_reg, fp32_reg, bcd_reg, sign_reg, start_conv, fp32)
-		begin
-			--preset everything
-			ready<='0'; --Its doing stuff now.
-			done_tick<='0'; --It's not done yet.
-			state_next <= state_reg;
-			fp32_next <= fp32_reg;
-			bcd_next <= bcd_reg;
-			sign_next <= sign_reg;
-		case state_reg is
-			when idle => --Accept input.
-				ready<='1';
-				if start_conv='1' then
-					fp32_next<=fp32;
-					state_next <= fp32tobcd;
-				end if;
-			when fp32tobcd =>
-				--Is first bit negative or not?
-				--'1' is minus, '0' is +ve
-				--Can go straight to BCD
-				if fp32_reg(31)='1' then
-					sign_next<='1';
-				else
-					sign_next<='0';
-				end if;
-				--Set mantissa to operation variable
-				fp32_mantissa(22 downto 0) <= fp32_reg(22 downto 0);
-				--Add 'invisible bit'
-				fp32_mantissa(23) <= '1';
-				--Set exponent: Doesn't do anything for now
-				
-				--fp32_exponent<=unsigned(fp32_reg(29 downto 23));
-				
-				--Now, time to implement some crazy stuff
-				--Convert exponential
-				 --Check 1st bit: 1 is +ve exponent
-				if fp32_reg(30)='1' then --Number is > 1
-					--location of decimal point is remaining number + 1
-					--fp32_exponent<=fp32_exponent+1;
-					--Decode this somehow. How do I Binary to BCD?
-					--That Algorithm. Should be started from the point at which the decimal point is located...
-					--Or should it? Better from the poitn at which there is data, ie. the last data point OR the decimal point
-					--Therefore determine which comes first. Never mind, may as well convert whole mantissa.
-					
-					--Start BCD conversion.
-					ConvData(23 downto 0)<=unsigned(fp32_mantissa(23 downto 0));
-					-- 32 bit input, therefore 32 shifts
-					for i in 0 to 31 loop
-						ConvData<=ConvData sll 1; -- left shift 1
-						--Check all digit subsets :S + ignore everything from 23 downwards
-						--160 bits, loop to 40, allow inefficiency until it works
-						for j in 40 downto 1 loop
-							if((ConvData((j*4+23) downto (j*4+19))) > 4) then
-								--Add 0011 to any set of 4
-								--IE if its the one before the end 1010 0000 then add 00110000.
-								--And "0000" * loop counter
-								ConvData<=ConvData+createthree(j);
-							end if;
-						end loop;
-					end loop;
-				else --Number is < 1, > 0
-				
-				end if;
-				bcd_next<=std_logic_vector(ConvData(183 downto 24));
-				state_next<=done;
-			when done =>
-				done_tick <= '1';
-				state_next <= idle;
-	end case;
-	end process;
-	bcd <= bcd_reg;
-	sign <= sign_reg;
+--	--state and register updates
+--	--CONTROL process, acts simultaneously with calculation process below
+--	process(clk, reset)
+--	begin
+--		if reset='1' then --Nullify registers
+--			state_reg <= idle;
+--			fp32_reg <= (others=>'0');
+--			bcd_reg <= (others=>'0');
+--			ConvData <= (others=>'0');
+--			sign_reg <= '0';
+--		elsif (clk'event and clk='1') then --Update registers
+--			state_reg <= state_next;
+--			fp32_reg <= fp32_next;
+--			bcd_reg <= bcd_next;
+--			sign_reg <= sign_next;
+--		end if;
+--	end process;
+--	--Data operation process 1 - sign set - nvm i'll ask on monday, i've put everything in here
+--	--sensitive to all regs being operated on, and input to-be-operated, and start_conv
+--	process(state_reg, fp32_reg, bcd_reg, sign_reg, start_conv, fp32)
+--		begin
+--			--preset everything
+--			ready<='0'; --Its doing stuff now.
+--			done_tick<='0'; --It's not done yet.
+--			state_next <= state_reg;
+--			fp32_next <= fp32_reg;
+--			bcd_next <= bcd_reg;
+--			sign_next <= sign_reg;
+--		case state_reg is
+--			when idle => --Accept input.
+--				ready<='1';
+--				if start_conv='1' then
+--					fp32_next<=fp32;
+--					state_next <= fp32tobcd;
+--				end if;
+--			when fp32tobcd =>
+--				--Is first bit negative or not?
+--				--'1' is minus, '0' is +ve
+--				--Can go straight to BCD
+--				if fp32_reg(31)='1' then
+--					sign_next<='1';
+--				else
+--					sign_next<='0';
+--				end if;
+--				--Set mantissa to operation variable
+--				fp32_mantissa(22 downto 0) <= fp32_reg(22 downto 0);
+--				--Add 'invisible bit'
+--				fp32_mantissa(23) <= '1';
+--				--Set exponent: Doesn't do anything for now
+--				
+--				--fp32_exponent<=unsigned(fp32_reg(29 downto 23));
+--				
+--				--Now, time to implement some crazy stuff
+--				--Convert exponential
+--				 --Check 1st bit: 1 is +ve exponent
+--				if fp32_reg(30)='1' then --Number is > 1
+--					--location of decimal point is remaining number + 1
+--					--fp32_exponent<=fp32_exponent+1;
+--					--Decode this somehow. How do I Binary to BCD?
+--					--That Algorithm. Should be started from the point at which the decimal point is located...
+--					--Or should it? Better from the poitn at which there is data, ie. the last data point OR the decimal point
+--					--Therefore determine which comes first. Never mind, may as well convert whole mantissa.
+--					
+--					--Start BCD conversion.
+--					ConvData(23 downto 0)<=unsigned(fp32_mantissa(23 downto 0));
+--					DEBUGConvData<=ConvData;
+--					-- 32 bit input, therefore 32 shifts
+--					for i in 0 to 31 loop
+--						ConvData<=ConvData sll 1; -- left shift 1
+--						--Check all digit subsets :S + ignore everything from 23 downwards
+--						--160 bits, loop to 40, allow inefficiency until it works
+--						for j in 40 downto 1 loop
+--							if((ConvData((j*4+23) downto (j*4+19))) > 4) then
+--								--Add 0011 to any set of 4
+--								--IE if its the one before the end 1010 0000 then add 00110000.
+--								--And "0000" * loop counter
+--								ConvData<=ConvData+createthree(j);
+--							end if;
+--						end loop;
+--					end loop;
+--				else --Number is < 1, > 0
+--				
+--				end if;
+--				bcd_next<=std_logic_vector(ConvData(183 downto 24));
+--				state_next<=done;
+--			when done =>
+--				done_tick <= '1';
+--				state_next <= idle;
+--	end case;
+--	end process;
+--	bcd <= bcd_reg;
+--	sign <= sign_reg;
 		
 
 end fp32_2_bcd;
