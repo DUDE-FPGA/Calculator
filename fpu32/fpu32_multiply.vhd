@@ -22,7 +22,7 @@ use IEEE.STD_LOGIC_1164.ALL;
 
 -- Uncomment the following library declaration if using
 -- arithmetic functions with Signed or Unsigned values
---use IEEE.NUMERIC_STD.ALL;
+use IEEE.NUMERIC_STD.ALL;
 
 -- Uncomment the following library declaration if instantiating
 -- any Xilinx primitives in this code.
@@ -44,6 +44,7 @@ architecture multiply of fpu32_multiply is
 	-- b - big, s - small, a - aligned, n - normalised
 	signal signb_reg, signb_next: std_logic;
 	signal signs_reg, signs_next: std_logic;
+	signal signn_reg, signn_next: std_logic;
 	signal expb_reg, expb_next: unsigned(7 downto 0);
 	signal exps_reg, exps_next: unsigned(7 downto 0);
 	signal expn_reg, expn_next: unsigned(7 downto 0);
@@ -54,7 +55,7 @@ architecture multiply of fpu32_multiply is
 	signal sumn_reg, sumn_next: unsigned(23 downto 0);
 	signal expdiff_reg, expdiff_next: unsigned(7 downto 0);
 	signal sum_reg, sum_next: unsigned(24 downto 0);
-	signal lead0_reg, lead0_next: unsigned(5 downto 0);
+	signal lsb_reg, lsb_next: integer;
 begin
 	--Registers
 	process(clk, reset)
@@ -63,6 +64,7 @@ begin
 			state_reg<=idle;
 			signb_reg<='0';
 			signs_reg<='0';
+			signn_reg<='0';
 			expb_reg<=(others=>'0');
 			exps_reg<=(others=>'0');
 			expn_reg<=(others=>'0');
@@ -73,12 +75,13 @@ begin
 			sumn_reg<=(others=>'0');
 			expdiff_reg<=(others=>'0');
 			sum_reg<=(others=>'0');
-			lead0_reg<=(others=>'0');
+			lsb_reg<=0;
 			
 		elsif(clk'event and clk='1') then
 			state_reg<=state_next;
 			signb_reg<=signb_next;
 			signs_reg<=signs_next;
+			signn_reg<=signn_next;
 			expb_reg<=expb_next;
 			exps_reg<=exps_next;
 			expn_reg<=expn_next;
@@ -89,7 +92,7 @@ begin
 			sumn_reg<=sumn_next;
 			expdiff_reg<=expdiff_next;
 			sum_reg<=sum_next;
-			lead0_reg<=lead0_next;
+			lsb_reg<=lsb_next;
 		end if;
 	end process;
 	-- FSMD next-state logic
@@ -97,13 +100,14 @@ begin
 				signb_reg, signs_reg, expb_reg, exps_reg,
 				expn_reg, fracb_reg, fracs_reg, fraca_reg,
 				fracn_reg, sumn_reg, expdiff_reg, sum_reg,
-				lead0_reg, start, state_reg)
+				lsb_reg, start, state_reg, signn_reg)
 	begin
 		ready <= '0';
 		done_tick <= '0';
 		state_next <= state_reg;
 		signb_next <= signb_reg;
 		signs_next <= signs_reg;
+		signn_next <= signn_reg;
 		expb_next <= expb_reg;
 		exps_next <= exps_reg;
 		expn_next <= expn_reg;
@@ -114,22 +118,58 @@ begin
 		sumn_next <= sumn_reg;
 		expdiff_next <= expdiff_reg;
 		sum_next <= sum_reg;
-		lead0_next <= lead0_reg;
+		lsb_next <= lsb_reg;
 		
 		case state_reg is 
 			when idle =>
-				state_next <= sort;
+				ready <= '1';
+				if start = '1' then
+					state_next <= sort;
+				end if;
 			when sort =>
+				if fp1(30 downto 0) > fp2(30 downto 0) then
+					signb_next <= fp1(31);
+					expb_next <= unsigned(fp1(30 downto 23));
+					fracb_next <= '1' & unsigned(fp1(22 downto 0));
+					signs_next <= fp2(31);
+					exps_next <= unsigned(fp2(30 downto 23));
+					fracs_next <= '1' & unsigned(fp2(22 downto 0));
+				else
+					signb_next <= fp2(31);
+					expb_next <= unsigned(fp2(30 downto 23));
+					fracb_next <= '1' & unsigned(fp2(22 downto 0));
+					signs_next <= fp1(31);
+					exps_next <= unsigned(fp1(30 downto 23));
+					fracs_next <= '1' & unsigned(fp1(22 downto 0));
+				end if;
 				state_next <= align;
+			-- Shift the mantissas to make integer
 			when align =>
+				for i in 0 to 23 loop
+					if fracb_reg(23 - i) = '1' then
+						lsb_next <= i;
+					end if;
+					if fracs_reg(23 - i) = '1' then
+						lsb_next <= i;
+					end if;
+				end loop;
 				state_next <= maths;
+			-- Multiply mantissas and sum exponents
 			when maths =>
+				fraca_next <= fracs_reg(23 downto (23 - lsb_reg)) * fracb_reg(23 downto (23 - lsb_reg));
+				expn_next <= (expb_reg - "01111111") + (exps_reg - "01111111") + "01111111";
+				signn_next <= signb_reg xor signs_reg;
 				state_next <= normalise;
 			when normalise =>
+				if lsb_reg + lsb_reg < 24 then
+					fracn_next(22 downto (22 - lsb_reg + lsb_reg)) <= fraca_reg((lsb_reg + lsb_reg - 1) downto 0);
+				end if;
 				state_next <= output;
 			when output =>
+				fp_out <= signn_reg & std_logic_vector(expn_reg) & std_logic_vector(fracn_reg);
 				state_next <= done;
 			when done =>
+				done_tick <= '1';
 				state_next <= idle;
 		end case;
 	
