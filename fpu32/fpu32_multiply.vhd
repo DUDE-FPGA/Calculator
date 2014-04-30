@@ -50,7 +50,7 @@ architecture multiply of fpu32_multiply is
 	signal expn_reg, expn_next: unsigned(7 downto 0);
 	signal fracb_reg, fracb_next: unsigned(23 downto 0);
 	signal fracs_reg, fracs_next: unsigned(23 downto 0);
-	signal fraca_reg, fraca_next: unsigned(23 downto 0);
+	signal fraca_reg, fraca_next: unsigned(47 downto 0);
 	signal fracn_reg, fracn_next: unsigned(22 downto 0);
 	signal sumn_reg, sumn_next: unsigned(23 downto 0);
 	signal expdiff_reg, expdiff_next: unsigned(7 downto 0);
@@ -156,17 +156,22 @@ begin
 				state_next <= maths;
 			-- Multiply mantissas and sum exponents
 			when maths =>
-				fraca_next <= fracs_reg(23 downto (23 - lsb_reg)) * fracb_reg(23 downto (23 - lsb_reg));
+				fraca_next((lsb_reg + lsb_reg + 1) downto 0) <= 
+					fracs_reg(23 downto (23 - lsb_reg)) * fracb_reg(23 downto (23 - lsb_reg));
 				expn_next <= (expb_reg - "01111111") + (exps_reg - "01111111") + "01111111";
 				signn_next <= signb_reg xor signs_reg;
 				state_next <= normalise;
 			when normalise =>
-				if lsb_reg + lsb_reg < 24 then
-					fracn_next(22 downto (22 - lsb_reg + lsb_reg)) <= fraca_reg((lsb_reg + lsb_reg - 1) downto 0);
+				if lsb_reg + lsb_reg < 23 then
+					fracn_next(22 downto (22 - (lsb_reg + lsb_reg))) <= fraca_reg((lsb_reg + lsb_reg) downto 0);
+				elsif lsb_reg + lsb_reg > 22 then
+					fracn_next(22 downto 0) <= 
+						fraca_reg((lsb_reg + lsb_reg + 1) downto ((lsb_reg + lsb_reg) - 21));
+						expn_next <= expn_reg + 1;
 				end if;
 				state_next <= output;
 			when output =>
-				fp_out <= signn_reg & std_logic_vector(expn_reg) & std_logic_vector(fracn_reg);
+				fp_out <= signn_reg & std_logic_vector(expn_reg) & std_logic_vector(fracn_reg(21 downto 0) & '0');
 				state_next <= done;
 			when done =>
 				done_tick <= '1';
