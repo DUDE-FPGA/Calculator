@@ -175,6 +175,8 @@ begin
 			when output =>
 				if lsb_reg + lsb_reg < 23 then
 					fp_out <= signn_reg & std_logic_vector(expn_reg) & std_logic_vector(fracn_reg(21 downto 0) & '0');
+				elsif msba_reg mod 2 = 1 then
+					fp_out <= signn_reg & std_logic_vector(expn_reg + 1) & std_logic_vector(fracn_reg);
 				else
 					fp_out <= signn_reg & std_logic_vector(expn_reg) & std_logic_vector(fracn_reg);
 				end if;
