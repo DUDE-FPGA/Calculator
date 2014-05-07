@@ -31,9 +31,9 @@ use IEEE.NUMERIC_STD.ALL;
 
 package bcd_def is
   subtype digit is std_logic_vector(3 downto 0); -- 4 bits
-  type bcddat is array (7 downto 0) of digit; -- bcd value
+  type bcddat is array (38 downto 0) of digit; -- bcd value
   subtype unsdigit is unsigned(3 downto 0); -- 4 bits unsigned
-  type bcdOP is array (7 downto 0) of unsdigit; -- unsigned bcd for operations
+  type bcdOP is array (38 downto 0) of unsdigit; -- unsigned bcd for operations
   type int_array is array (0 to 2) of integer; -- integer array 3 wide for loopcounter registers
 end;
 
@@ -66,25 +66,30 @@ end fp32bcd2;
 
 architecture fp32bcd of fp32bcd2 is
 --States
-	type state_type is (idle, assign, ext_iter,shift_arr, check_five, fp32tobcd, done);
+	type state_type is (idle, assign, split_mant,shift_arr, check_five, fp32tobcd, done);
 	signal state_reg, state_next: state_type;
 	--Registers
 	signal fp32_reg, fp32_next: std_logic_vector(31 downto 0);
 	signal bcd_reg, bcd_next: bcddat;
 	signal sign_reg, sign_next: std_logic;
 	signal loopcounter_reg, loopcounter_next: int_array;
-	  --Operation Variables
+	  --Operation Signals
 	  signal fp32_mantissa_reg, fp32_mantissa_next: std_logic_vector(23 downto 0); -- 23 bits + invisible bit
-	  
-	  signal fp32_exponent: unsigned(7 downto 0); -- 8 bits
+	  signal fp32_intsect_reg, fp32_intsect_next: unsigned(23 downto 0); -- integer section of the mantissa
+	  signal fp32_fracsect_reg, fp32_fracsect_next: unsigned(23 downto 0); -- fractional section of the mantissa
+	  signal fp32_exponent_reg, fp32_exponent_next: unsigned(7 downto 0); -- 8 bits
 	  signal fp32_datastartpoint: integer; -- from RHS
 	  
 	  signal bcdOPdat_reg, bcdOPdat_next: bcdOP; -- Operation variable
+	  
+	  
 	
 begin
 --state and register updates
 	--CONTROL process, acts simultaneously with calculation process below
 	process(clk, reset)
+		--Attempt at a real variable to make things easier
+		variable fp32_exponent: unsigned(7 downto 0);
 	begin
 		if reset='1' then --Nullify registers
 			state_reg <= idle;
@@ -93,7 +98,12 @@ begin
 			loopcounter_reg(0) <= 0;
 			loopcounter_reg(1) <= 0;
 			loopcounter_reg(2) <= 0;
+			fp32_intsect_reg <= (others=>'0');
+			fp32_fracsect_reg <= (others=>'0');
+			
 			fp32_mantissa_reg <= (others=>'0');
+			fp32_exponent_reg <= (others=>'0');
+			
 			bcdOPdat_reg <= (others=>(others=>'0'));
 			--ConvData <= (others=>'0');
 			sign_reg <= '0';
@@ -106,16 +116,21 @@ begin
 --			loopcounter_reg(0) <= loopcounter_next(0);
 --			loopcounter_reg(1) <= loopcounter_next(1);
 --			loopcounter_reg(2) <= loopcounter_next(2);
+			fp32_intsect_reg <= fp32_intsect_next;
+			fp32_fracsect_reg <= fp32_fracsect_next;
+
 			fp32_mantissa_reg <= fp32_mantissa_next;
+			fp32_exponent_reg <= fp32_exponent_next;
+			
 			bcdOPdat_reg <= bcdOPdat_next;
 		end if;
 	end process;
 	
 	--Data operation process 1
 	--sensitive to all regs being operated on, and input to-be-operated, and start_conv
-	process(state_reg, fp32_reg, bcdOPdat_reg, bcd_reg, sign_reg, loopcounter_reg, start_conv, fp32, fp32_mantissa_reg)
+	process(state_reg, fp32_reg, bcdOPdat_reg, bcd_reg, sign_reg, loopcounter_reg, start_conv, fp32, fp32_mantissa_reg, fp32_intsect_reg, fp32_fracsect_reg)
 		begin
-			--preset everything. Nope. Apparently something else that makes it work that I don;t understand
+			--preset everything. Nope. Apparently something else that makes it work that I don't understand
 			ready<='0'; --Its doing stuff now.
 			done_tick<='0'; --It's not done yet.
 			state_next <= state_reg;
@@ -135,10 +150,9 @@ begin
 					state_next <= assign;
 				end if;
 			when assign =>
-				fp32_next<=fp32; --OBSOLETION IN PROGRESS
+				--OBSOLETE: fp32_exponent_next <= (unsigned(fp32_reg(30 downto 23)) - "01111111"); --etc etc
+				fp32_intsect_next(1+to_integer(unsigned(fp32_reg(30 downto 23)) - "01111111") downto 0) <= '1' & unsigned(fp32_reg(22 downto (22-to_integer(unsigned(fp32_reg(30 downto 23)) - "01111111"))));
 				
-				--Set mantissa to mantissa register --Add 'invisible bit'
-				fp32_mantissa_next(23 downto 0) <= '1' & fp32(22 downto 0);
 				
 				--Set exponent: Doesn't do anything for now
 					--fp32_exponent<=unsigned(fp32_reg(29 downto 23));
