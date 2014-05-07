@@ -30,8 +30,11 @@ use IEEE.NUMERIC_STD.ALL;
 --use UNISIM.VComponents.all;
 
 package bcd_def is
+  --OUTPUTS
   subtype digit is std_logic_vector(3 downto 0); -- 4 bits
-  type bcddat is array (38 downto 0) of digit; -- bcd value
+  type bcddat is array (7 downto 0) of digit; -- Output bcd value
+  type bcdind is array (1 downto 0) of digit; -- Output bcd Standard Form
+  --WORKING
   subtype unsdigit is unsigned(3 downto 0); -- 4 bits unsigned
   type bcdOP is array (38 downto 0) of unsdigit; -- unsigned bcd for operations
   type int_array is array (0 to 2) of integer; -- integer array 3 wide for loopcounter registers
@@ -60,13 +63,15 @@ entity fp32bcd2 is
 --			  type sulv2d is array(natural range<>, natural range<>) of std_logic_vector;
 --			  input : in sulv2d(39 downto 0,3 downto 0);
 			  bcds : out bcddat;
+			  bcdindex : out bcdind;
            --bcd : out  STD_LOGIC;
            sign : out  STD_LOGIC);
+			  
 end fp32bcd2;
 
 architecture fp32bcd of fp32bcd2 is
 --States
-	type state_type is (idle, assign, split_mant,shift_arr, check_five, fp32tobcd, done);
+	type state_type is (idle, assign, bin_2_bcd, check_five, assign_frac, done);
 	signal state_reg, state_next: state_type;
 	--Registers
 	signal fp32_reg, fp32_next: std_logic_vector(31 downto 0);
@@ -74,10 +79,13 @@ architecture fp32bcd of fp32bcd2 is
 	signal sign_reg, sign_next: std_logic;
 	signal loopcounter_reg, loopcounter_next: int_array;
 	  --Operation Signals
+	  
 	  signal fp32_mantissa_reg, fp32_mantissa_next: std_logic_vector(23 downto 0); -- 23 bits + invisible bit
+	  signal fp32_exponent_reg, fp32_exponent_next: unsigned(7 downto 0); -- 8 bits
+	  
 	  signal fp32_intsect_reg, fp32_intsect_next: unsigned(23 downto 0); -- integer section of the mantissa
 	  signal fp32_fracsect_reg, fp32_fracsect_next: unsigned(23 downto 0); -- fractional section of the mantissa
-	  signal fp32_exponent_reg, fp32_exponent_next: unsigned(7 downto 0); -- 8 bits
+	  
 	  signal fp32_datastartpoint: integer; -- from RHS
 	  
 	  signal bcdOPdat_reg, bcdOPdat_next: bcdOP; -- Operation variable
@@ -88,8 +96,6 @@ begin
 --state and register updates
 	--CONTROL process, acts simultaneously with calculation process below
 	process(clk, reset)
-		--Attempt at a real variable to make things easier
-		variable fp32_exponent: unsigned(7 downto 0);
 	begin
 		if reset='1' then --Nullify registers
 			state_reg <= idle;
@@ -129,6 +135,9 @@ begin
 	--Data operation process 1
 	--sensitive to all regs being operated on, and input to-be-operated, and start_conv
 	process(state_reg, fp32_reg, bcdOPdat_reg, bcd_reg, sign_reg, loopcounter_reg, start_conv, fp32, fp32_mantissa_reg, fp32_intsect_reg, fp32_fracsect_reg)
+			--Attempt at a real variable to make things easier
+			--variable fp32_exponent: unsigned(7 downto 0); -- When or If I have time
+			variable outcount: integer; --Obtains the leftmost digit of the data to be output
 		begin
 			--preset everything. Nope. Apparently something else that makes it work that I don't understand
 			ready<='0'; --Its doing stuff now.
@@ -150,12 +159,33 @@ begin
 					state_next <= assign;
 				end if;
 			when assign =>
-				--OBSOLETE: fp32_exponent_next <= (unsigned(fp32_reg(30 downto 23)) - "01111111"); --etc etc
-				fp32_intsect_next(1+to_integer(unsigned(fp32_reg(30 downto 23)) - "01111111") downto 0) <= '1' & unsigned(fp32_reg(22 downto (22-to_integer(unsigned(fp32_reg(30 downto 23)) - "01111111"))));
+				--We only want to output 8 BCD digits
+				--If the fp32_intsect makes 8 digits, no point doing the fraction.
+				fp32_exponent_next <= (unsigned(fp32_reg(30 downto 23)) - "01111111"); --etc etc
+				--fp32_exponent:=unsigned(fp32_reg(30 downto 23)) - "01111111";
+				if fp32_exponent_next>=0 then --positive exponent (or zero)
+					if fp32_exponent_next<23 then -- Fractional part exists but may not be needed, also no added zeros
+						if fp32_exponent_next=0 then
+							fp32_intsect_next(0 downto 0) <= '1'; -- zero exponent, so just invisible bit
+							loopcounter_next(0) <= '0'; -- One shift for one bit
+							loopcounter_next(1) <= 0; -- No extra zeroes
+						else
+							fp32_intsect_next(to_integer(fp32_exponent_next) downto 0) <= '1' & unsigned(fp32_reg(22 downto (22-to_integer(fp32_exponent_next))));
+							loopcounter_next(0) <= to_integer(fp32_exponent_next); --left shift for the number of bits
+							loopcounter_next(1) <= 0; -- No extra zeroes
+						end if;
+					else -- No fractional part, incl. added zeroes.
+						fp32_intsect_next(23 downto 0) <= '1' & unsigned(fp32_reg(22 downto 0));
+						loopcounter_next(0) <= 23; --left shift for the number of original bits
+						loopcounter_next(1) <= to_integer(fp32_exponent_next)-23; -- Then add some zeroes
+					end if;
+					
+					state_next <= bin_2_bcd; --Convert intsect to bcd
+				else --negative exponent
+					--GOTO nasty fractional bit
+					state_next <= assign_frac;
+				end if;
 				
-				
-				--Set exponent: Doesn't do anything for now
-					--fp32_exponent<=unsigned(fp32_reg(29 downto 23));
 				-- Zero Operation Register
 				bcdOPdat_next <= (others=>(others=>'0')); -- Preset Operation register to zero
 				
@@ -167,81 +197,61 @@ begin
 --					loopcounter_next <= loopcounter_reg + 1;
 --				end if;
 				--________________________________
-				
-				state_next <= ext_iter;
 				--bcdOPdat(0)(0)<='1'; --DEBUG
-			when ext_iter =>
-				--Check for negative value
-				--'1' is minus, '0' is +ve
-				if fp32_reg(31)='1' then
-					sign_next<='1';
-				else
-					sign_next<='0';
-				end if;
-				
-				-- This should go elsewhere. Don't know where yet. Doesn't matter for now.
---				if fp32_reg(30)='1' then --Number is > 1
---					
---				end if
-				
-			when fp32tobcd =>
-				--Is first bit negative or not?
-				--'1' is minus, '0' is +ve
-				--Can go straight to BCD
-				
-				
-				
-				
-				
-				--Now, time to implement some crazy stuff
-				--Convert exponential
-				 --Check 1st bit: 1 is +ve exponent
-				if fp32_reg(30)='1' then --Number is > 1
-					--location of decimal point is remaining number + 1
-					--fp32_exponent<=fp32_exponent+1;
-					--Decode this somehow. How do I Binary to BCD?
-					--That Algorithm. Should be started from the point at which the decimal point is located...
-					--Or should it? Better from the poitn at which there is data, ie. the last data point OR the decimal point
-					--Therefore determine which comes first. Never mind, may as well convert whole mantissa.
-					
-					--Start BCD conversion.
-					
-					--____________________________________________________________
-					--Here we begin the Crazy algorithm. Will try to load it all into a loop here, but it may need an FSMD state of its own.
-					--____________________________________________________________
-					
-					-- 24 bit input, therefore 24 shifts
-					for i in 23 downto 0 loop
-						-- left shift 1 - unnecessary, can just use loop ID to pull the bits from the mantissa
-						-- loop should finish at the end of the dataset, therfore need first 1 from the RHS
-						-- This is hard. Take the first bit of every set of 4 and shift it into the rhs of the one above
-						-- Loop over all BCD subsets, to shift all left by 1
-						-- Don't do all subsets - final subset needs to be drawn from the mantissa
-						for j in 7 downto 1 loop
-							bcdOPdat(j)<=bcdOPdat(j) sll 1; -- left shift 1
-							bcdOPdat(j)(0)<=bcdOPdat(j-1)(3); -- Assign bit from next one along to right-most digit
-						end loop;
-						-- Draw digit from mantissa
-						bcdOPdat(0)<=bcdOPdat(0) sll 1;
-						bcdOPdat(0)(0)<=fp32_mantissa_reg(i);
-						--Check all digit subsets :S
-						--If > 4 then add 3.
-						for j in 7 downto 0 loop
-							if bcdOPdat(j) > 4 then
-								bcdOPdat(j)<=bcdOPdat(j)+"0011";
-							end if;
-						end loop;
-						
-					end loop;
-				else --Number is < 1, > 0
-				
-				end if;
-				
-				state_next<=done;
-			when done =>
-				for i in 7 downto 0 loop
-					bcd_next(i)<=std_logic_vector(bcdOPdat(i));
+			when bin_2_bcd =>
+				--loopcounter_reg(0) goes from <exponent> downto 0
+				--Algorithm. Shift into BCD.
+				--LEFT SHIFT ALL
+				for i in 38 downto 1 loop
+						bcdOPdat_next(i)<=bcdOPdat_reg(i) sll 1; -- left shift 1
+						bcdOPdat_next(i)(0)<=bcdOPdat_reg(i-1)(3); -- Assign left-most bit from next one along to right-most digit
 				end loop;
+				-- Draw digit from mantissa
+				bcdOPdat_next(0)<=bcdOPdat_reg(0) sll 1;
+				if fp32_exponent_reg < 24 then
+					
+				else
+				if loopcounter_reg(0)<1 AND loopcounter_reg(1)<1 then
+					bcdOPdat_next(0)(0)<=fp32_intsect_reg(loopcounter_reg(0)); -- Don't forget the last value
+					state_next<=done;
+				elsif loopcounter_reg(1)>0 AND loopcounter_reg(0)<1 then --ADD EXTRA ZEROES
+					bcdOPdat_next(0)(0)<='0';
+					loopcounter_next(1) <= loopcounter_reg(1)-1;
+					state_next<=check_five; -- scan for BCD values > 4, add 3.
+				elsif loopcounter_reg(0)>0 then --PULL FROM INTSECT
+					bcdOPdat_next(0)(0)<=fp32_intsect_reg(loopcounter_reg(0));
+					loopcounter_next(0) <= loopcounter_reg(0)-1;
+					state_next<=check_five; -- scan for BCD values > 4, add 3.
+				end if;
+			when check_five =>
+				for i in 38 downto 0 loop
+					if bcdOPdat_reg(i) > 4 then
+						bcdOPdat_next(i)<=bcdOPdat_reg(i)+"0011";
+					end if;
+				end loop;
+				state_next <= bin_2_bcd;
+			when assign_frac =>
+				state_next <= done;
+			when done =>
+				--Find furthest left BCD digit that is non-zero
+				outcount:=0;
+				for i in 38 downto 0 loop
+					if bcdOPdat_reg(i)!="0000" then
+						outcount:=i;
+						exit;
+					end if;
+				end loop;
+				--FOUND
+				--Check to see if fraction is needed, assign part of answer if yes, if no assign full answer and finish
+				if outcount<7 then --outcount less than 7, therefore less than 8 digits, output first part, then go do fractional section.
+					for i in 7 downto 7-outcount loop
+						bcd_next(i)<=std_logic_vector(bcdOPdat_reg(outcount-(7-i)));
+					end loop;
+				else
+					for i in 7 downto 0 loop
+						bcd_next(i)<=std_logic_vector(bcdOPdat_reg(outcount-(7-i)));
+					end loop;
+					--Output remaining as exp
 				done_tick <= '1';
 				state_next <= idle;
 	end case;
@@ -250,3 +260,9 @@ begin
 	sign <= sign_reg;
 end fp32bcd;
 
+--_______________________________________________________________
+--NULL CODE
+--_______________________________________________________________
+--if fp32_exponent_next>0 AND fp32_exponent_next<23 then -- Fractional part exists, also no added zeros
+--elsif fp32_exponent_next>22 then -- No fractional part, incl. added zeroes.
+--fp32_intsect_next(23 downto 0) <= '1' & unsigned(fp32_reg(22 downto 0));
