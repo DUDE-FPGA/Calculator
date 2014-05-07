@@ -38,7 +38,7 @@ end fpu32_multiply;
 
 architecture multiply of fpu32_multiply is
 	--Register definitions
-	type state_type is (idle, sort, align, maths, normalise, 
+	type state_type is (idle, sort, align, maths, normalise1, normalise2, 
 							  output, done);
 	signal state_reg, state_next: state_type;
 	-- b - big, s - small, a - aligned, n - normalised
@@ -50,12 +50,11 @@ architecture multiply of fpu32_multiply is
 	signal expn_reg, expn_next: unsigned(7 downto 0);
 	signal fracb_reg, fracb_next: unsigned(23 downto 0);
 	signal fracs_reg, fracs_next: unsigned(23 downto 0);
-	signal fraca_reg, fraca_next: unsigned(23 downto 0);
+	signal fraca_reg, fraca_next: unsigned(47 downto 0);
 	signal fracn_reg, fracn_next: unsigned(22 downto 0);
-	signal sumn_reg, sumn_next: unsigned(23 downto 0);
 	signal expdiff_reg, expdiff_next: unsigned(7 downto 0);
-	signal sum_reg, sum_next: unsigned(24 downto 0);
 	signal lsb_reg, lsb_next: integer;
+	signal msba_reg, msba_next: integer;
 begin
 	--Registers
 	process(clk, reset)
@@ -72,10 +71,9 @@ begin
 			fracs_reg<=(others=>'0');
 			fraca_reg<=(others=>'0');
 			fracn_reg<=(others=>'0');
-			sumn_reg<=(others=>'0');
 			expdiff_reg<=(others=>'0');
-			sum_reg<=(others=>'0');
 			lsb_reg<=0;
+			msba_reg<=0;
 			
 		elsif(clk'event and clk='1') then
 			state_reg<=state_next;
@@ -89,18 +87,17 @@ begin
 			fracs_reg<=fracs_next;
 			fraca_reg<=fraca_next;
 			fracn_reg<=fracn_next;
-			sumn_reg<=sumn_next;
 			expdiff_reg<=expdiff_next;
-			sum_reg<=sum_next;
 			lsb_reg<=lsb_next;
+			msba_reg<=msba_next;
 		end if;
 	end process;
 	-- FSMD next-state logic
 	process (fp1, fp2,
 				signb_reg, signs_reg, expb_reg, exps_reg,
 				expn_reg, fracb_reg, fracs_reg, fraca_reg,
-				fracn_reg, sumn_reg, expdiff_reg, sum_reg,
-				lsb_reg, start, state_reg, signn_reg)
+				fracn_reg, expdiff_reg, 
+				lsb_reg, start, state_reg, signn_reg, msba_reg)
 	begin
 		ready <= '0';
 		done_tick <= '0';
@@ -115,9 +112,7 @@ begin
 		fracs_next <= fracs_reg;
 		fraca_next <= fraca_reg;
 		fracn_next <= fracn_reg;
-		sumn_next <= sumn_reg;
 		expdiff_next <= expdiff_reg;
-		sum_next <= sum_reg;
 		lsb_next <= lsb_reg;
 		
 		case state_reg is 
@@ -156,17 +151,35 @@ begin
 				state_next <= maths;
 			-- Multiply mantissas and sum exponents
 			when maths =>
-				fraca_next <= fracs_reg(23 downto (23 - lsb_reg)) * fracb_reg(23 downto (23 - lsb_reg));
+				fraca_next((lsb_reg + lsb_reg + 1) downto 0) <= 
+					fracs_reg(23 downto (23 - lsb_reg)) * fracb_reg(23 downto (23 - lsb_reg));
 				expn_next <= (expb_reg - "01111111") + (exps_reg - "01111111") + "01111111";
 				signn_next <= signb_reg xor signs_reg;
-				state_next <= normalise;
-			when normalise =>
-				if lsb_reg + lsb_reg < 24 then
-					fracn_next(22 downto (22 - lsb_reg + lsb_reg)) <= fraca_reg((lsb_reg + lsb_reg - 1) downto 0);
+				state_next <= normalise1;
+			when normalise1 =>
+				for i in 47 downto 0 loop
+					if (fraca_reg(i) = '1') then
+						msba_next <= i;
+						exit when fraca_reg(i) = '1';
+					end if;
+				end loop;
+				state_next <= normalise2;
+			when normalise2 =>
+				if lsb_reg + lsb_reg < 23 then
+					fracn_next(22 downto (22 - (lsb_reg + lsb_reg))) <= fraca_reg((lsb_reg + lsb_reg) downto 0);
+				elsif lsb_reg + lsb_reg > 22 then
+					fracn_next(22 downto 0) <= 
+						fraca_reg((msba_reg - 1) downto ((msba_reg - 1) - 22));
 				end if;
 				state_next <= output;
 			when output =>
-				fp_out <= signn_reg & std_logic_vector(expn_reg) & std_logic_vector(fracn_reg);
+				if lsb_reg + lsb_reg < 23 then
+					fp_out <= signn_reg & std_logic_vector(expn_reg) & std_logic_vector(fracn_reg(21 downto 0) & '0');
+				elsif msba_reg mod 2 = 1 then
+					fp_out <= signn_reg & std_logic_vector(expn_reg + 1) & std_logic_vector(fracn_reg);
+				else
+					fp_out <= signn_reg & std_logic_vector(expn_reg) & std_logic_vector(fracn_reg);
+				end if;
 				state_next <= done;
 			when done =>
 				done_tick <= '1';

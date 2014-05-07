@@ -103,12 +103,78 @@ BEGIN
 		wait until falling_edge(clk);
 		wait until falling_edge(clk);
 		start <= '1';
-		fp1 <= "01000000000000000000000000000000"; --2
-		fp2 <= "01000000000000000000000000000000"; --2
+		fp1 <= "01000001101000000000000000000000"; --20
+		fp2 <= "01000010110010000000000000000000"; --100
 		
 		wait for clk_period;
 		start <= '0';
 		wait for clk_period*10;
+		reset <= '1';
+		wait until falling_edge(clk);
+		reset <= '0';
+		wait until falling_edge(clk);
+		start <= '1';
+		fp1 <= "01000000000000000000000000000000"; --2
+		fp2 <= "00111110100000000000000000000000"; --0.25
+		
+		wait for clk_period;
+		start <= '0';
+		wait for clk_period*10;
+		reset <= '1';
+		wait until falling_edge(clk);
+		reset <= '0';
+		wait until falling_edge(clk);
+		start <= '1';
+		fp1 <= "00111101111111001011100100100100"; --0.1234
+		fp2 <= "01000000101000000000000000000000"; --5 = 0.617
+		wait for clk_period;
+		start <= '0';
+		wait for clk_period*10;
+		
+		reset <= '1';
+		wait until falling_edge(clk);
+		reset <= '0';
+		wait until falling_edge(clk);
+		start <= '1';
+		fp1 <= "00111111000010000011000100100111"; --0.532
+		fp2 <= "00111110011011111001110110110010"; --0.234 = 0.124488
+		wait for clk_period;
+		start <= '0';
+		wait for clk_period*10;
+		
+		reset <= '1';
+		wait until falling_edge(clk);
+		reset <= '0';
+		wait until falling_edge(clk);
+		start <= '1';
+		fp1 <= "00111101111111011100101111001101"; --0.123923875
+		fp2 <= "11000000010011110100110110111110"; -- -3.23912 = -0.40140430199
+		wait for clk_period;
+		start <= '0';
+		wait for clk_period*10;
+		
+		reset <= '1';
+		wait until falling_edge(clk);
+		reset <= '0';
+		wait until falling_edge(clk);
+		start <= '1';
+		fp1 <= "01000100100110011100000000000000"; --1230
+		fp2 <= "01000111010100000110000000000000"; -- 53344 = 65613120 0x4c7a4b50
+		wait for clk_period;
+		start <= '0';
+		wait for clk_period*10;
+		
+		reset <= '1';
+		wait until falling_edge(clk);
+		reset <= '0';
+		wait until falling_edge(clk);
+		start <= '1';
+		fp1 <= "00110101100001100011011110111101"; --1.0E-6
+		fp2 <= "00110011000000001101100101011001"; -- 3.0E-8 = 3E-14 0x29071ba5
+		wait for clk_period;
+		start <= '0';
+		wait for clk_period*10;
+		
 		assert false
 		severity failure;
    end process;
