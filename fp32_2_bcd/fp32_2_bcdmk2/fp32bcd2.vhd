@@ -31,9 +31,10 @@ use IEEE.NUMERIC_STD.ALL;
 
 package bcd_def is
   subtype digit is std_logic_vector(3 downto 0); -- 4 bits
-  type bcddat is array (39 downto 0) of digit; -- bcd value
+  type bcddat is array (7 downto 0) of digit; -- bcd value
   subtype unsdigit is unsigned(3 downto 0); -- 4 bits unsigned
-  type bcdOP is array (39 downto 0) of unsdigit; -- unsigned bcd for operations
+  type bcdOP is array (7 downto 0) of unsdigit; -- unsigned bcd for operations
+  type int_array is array (0 to 2) of integer; -- integer array 3 wide for loopcounter registers
 end;
 
 use work.bcd_def.all;
@@ -65,17 +66,20 @@ end fp32bcd2;
 
 architecture fp32bcd of fp32bcd2 is
 --States
-type state_type is (idle, fp32tobcd, done);
+	type state_type is (idle, assign, ext_iter,shift_arr, check_five, fp32tobcd, done);
 	signal state_reg, state_next: state_type;
 	--Registers
 	signal fp32_reg, fp32_next: std_logic_vector(31 downto 0);
 	signal bcd_reg, bcd_next: bcddat;
 	signal sign_reg, sign_next: std_logic;
-	--Operation Variables
-	signal fp32_mantissa: std_logic_vector(23 downto 0); -- 23 bits + invisible bit
-	signal fp32_exponent: unsigned(7 downto 0); -- 8 bits
-	signal fp32_datastartpoint: integer; -- from RHS
-	signal bcdOPdat: bcdOP; -- Operation variable
+	signal loopcounter_reg, loopcounter_next: int_array;
+	  --Operation Variables
+	  signal fp32_mantissa_reg, fp32_mantissa_next: std_logic_vector(23 downto 0); -- 23 bits + invisible bit
+	  
+	  signal fp32_exponent: unsigned(7 downto 0); -- 8 bits
+	  signal fp32_datastartpoint: integer; -- from RHS
+	  
+	  signal bcdOPdat_reg, bcdOPdat_next: bcdOP; -- Operation variable
 	
 begin
 --state and register updates
@@ -86,6 +90,11 @@ begin
 			state_reg <= idle;
 			fp32_reg <= (others=>'0');
 			bcd_reg <= (others=>(others=>'0')); -- define to zero for a 2D array
+			loopcounter_reg(0) <= 0;
+			loopcounter_reg(1) <= 0;
+			loopcounter_reg(2) <= 0;
+			fp32_mantissa_reg <= (others=>'0');
+			bcdOPdat_reg <= (others=>(others=>'0'));
 			--ConvData <= (others=>'0');
 			sign_reg <= '0';
 		elsif (clk'event and clk='1') then --Update registers
@@ -93,43 +102,82 @@ begin
 			fp32_reg <= fp32_next;
 			bcd_reg <= bcd_next;
 			sign_reg <= sign_next;
+			loopcounter_reg <= loopcounter_next;
+--			loopcounter_reg(0) <= loopcounter_next(0);
+--			loopcounter_reg(1) <= loopcounter_next(1);
+--			loopcounter_reg(2) <= loopcounter_next(2);
+			fp32_mantissa_reg <= fp32_mantissa_next;
+			bcdOPdat_reg <= bcdOPdat_next;
 		end if;
 	end process;
 	
 	--Data operation process 1
 	--sensitive to all regs being operated on, and input to-be-operated, and start_conv
-	process(state_reg, fp32_reg, bcd_reg, sign_reg, start_conv, fp32)
+	process(state_reg, fp32_reg, bcdOPdat_reg, bcd_reg, sign_reg, loopcounter_reg, start_conv, fp32, fp32_mantissa_reg)
 		begin
-			--preset everything
+			--preset everything. Nope. Apparently something else that makes it work that I don;t understand
 			ready<='0'; --Its doing stuff now.
 			done_tick<='0'; --It's not done yet.
 			state_next <= state_reg;
 			fp32_next <= fp32_reg;
 			bcd_next <= bcd_reg;
 			sign_next <= sign_reg;
+			loopcounter_next <= loopcounter_reg;
+			fp32_mantissa_next <= fp32_mantissa_reg;
+			bcdOPdat_next <= bcdOPdat_reg;
 		case state_reg is
 			when idle => --Accept input.
 				ready<='1';
 				if start_conv='1' then
-					fp32_next<=fp32;
-					state_next <= fp32tobcd;
+
+					
+					
+					state_next <= assign;
 				end if;
-			when fp32tobcd =>
-				--Is first bit negative or not?
+			when assign =>
+				fp32_next<=fp32; --OBSOLETION IN PROGRESS
+				
+				--Set mantissa to mantissa register --Add 'invisible bit'
+				fp32_mantissa_next(23 downto 0) <= '1' & fp32(22 downto 0);
+				
+				--Set exponent: Doesn't do anything for now
+					--fp32_exponent<=unsigned(fp32_reg(29 downto 23));
+				-- Zero Operation Register
+				bcdOPdat_next <= (others=>(others=>'0')); -- Preset Operation register to zero
+				
+				--NULL CODE
+				--________________________________
+--				if loopcounter_reg > 6 then
+--					state_next <= fp32tobcd;
+--				else
+--					loopcounter_next <= loopcounter_reg + 1;
+--				end if;
+				--________________________________
+				
+				state_next <= ext_iter;
+				--bcdOPdat(0)(0)<='1'; --DEBUG
+			when ext_iter =>
+				--Check for negative value
 				--'1' is minus, '0' is +ve
-				--Can go straight to BCD
 				if fp32_reg(31)='1' then
 					sign_next<='1';
 				else
 					sign_next<='0';
 				end if;
-				--Set mantissa to operation variable
-				fp32_mantissa(22 downto 0) <= fp32_reg(22 downto 0);
-				--Add 'invisible bit'
-				fp32_mantissa(23) <= '1';
-				--Set exponent: Doesn't do anything for now
 				
-				--fp32_exponent<=unsigned(fp32_reg(29 downto 23));
+				-- This should go elsewhere. Don't know where yet. Doesn't matter for now.
+--				if fp32_reg(30)='1' then --Number is > 1
+--					
+--				end if
+				
+			when fp32tobcd =>
+				--Is first bit negative or not?
+				--'1' is minus, '0' is +ve
+				--Can go straight to BCD
+				
+				
+				
+				
 				
 				--Now, time to implement some crazy stuff
 				--Convert exponential
@@ -155,16 +203,16 @@ begin
 						-- This is hard. Take the first bit of every set of 4 and shift it into the rhs of the one above
 						-- Loop over all BCD subsets, to shift all left by 1
 						-- Don't do all subsets - final subset needs to be drawn from the mantissa
-						for j in 39 downto 1 loop
+						for j in 7 downto 1 loop
 							bcdOPdat(j)<=bcdOPdat(j) sll 1; -- left shift 1
 							bcdOPdat(j)(0)<=bcdOPdat(j-1)(3); -- Assign bit from next one along to right-most digit
 						end loop;
 						-- Draw digit from mantissa
 						bcdOPdat(0)<=bcdOPdat(0) sll 1;
-						bcdOPdat(0)(0)<=fp32_mantissa(i);
+						bcdOPdat(0)(0)<=fp32_mantissa_reg(i);
 						--Check all digit subsets :S
 						--If > 4 then add 3.
-						for j in 39 downto 0 loop
+						for j in 7 downto 0 loop
 							if bcdOPdat(j) > 4 then
 								bcdOPdat(j)<=bcdOPdat(j)+"0011";
 							end if;
@@ -177,7 +225,7 @@ begin
 				
 				state_next<=done;
 			when done =>
-				for i in 39 downto 0 loop
+				for i in 7 downto 0 loop
 					bcd_next(i)<=std_logic_vector(bcdOPdat(i));
 				end loop;
 				done_tick <= '1';
