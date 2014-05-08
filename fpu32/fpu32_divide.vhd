@@ -57,7 +57,16 @@ architecture divide of fpu32_divide is
 	signal msba_reg, msba_next: integer;
 	signal xi_reg, xi_next: std_logic_vector(31 downto 0);
 	signal d_reg, d_next: std_logic_vector(31 downto 0);
+	
 
+	function MULTIPLY(X : boolean)
+					return std_logic_vector is
+	begin
+		fpu32_mul_unit: entity fpu32_multiply(multiply)
+			port map( clk=>clk, reset=>reset, start=>start);
+	end MULTIPLY;
+--done_tick=>done_tick, ready=>ready,
+--fp1=>d_reg, fp2=>xi_reg, fp_out=>d_reg 
 begin
 	--Registers
 	process(clk, reset)
@@ -153,7 +162,7 @@ begin
 			-- x[i+1] = x[i](2 - d*x[i])
 			-- xi_next <= xi_reg * (2 - d_reg * xi_reg);
 			-- First do d_reg * xi_reg
-			-- fpu32_mul: entity work.
+
 
 			when normalise1 =>
 
