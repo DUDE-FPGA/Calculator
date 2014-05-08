@@ -52,21 +52,18 @@ architecture divide of fpu32_divide is
 	signal frac_denominator_reg, frac_denominator_next: unsigned(23 downto 0);
 	signal fraca_reg, fraca_next: unsigned(47 downto 0);
 	signal fracn_reg, fracn_next: unsigned(22 downto 0);
-	signal expdiff_reg, expdiff_next: unsigned(7 downto 0);
 	signal lsb_reg, lsb_next: integer;
 	signal msba_reg, msba_next: integer;
 	signal xi_reg, xi_next: std_logic_vector(31 downto 0);
 	signal d_reg, d_next: std_logic_vector(31 downto 0);
+	signal tmp_reg, tmp_next: std_logic_vector(31 downto 0); -- Temporary FP32 var for calculations
 	
-
-	function MULTIPLY(X : boolean)
-					return std_logic_vector is
-	begin
-		fpu32_mul_unit: entity fpu32_multiply(multiply)
-			port map( clk=>clk, reset=>reset, start=>start);
-	end MULTIPLY;
---done_tick=>done_tick, ready=>ready,
---fp1=>d_reg, fp2=>xi_reg, fp_out=>d_reg 
+	-- Signals for multiply unit 1
+	signal start_m1_reg, start_m1_next: std_logic;
+	signal reset_m1_reg, reset_m1_next: std_logic;
+	signal done_m1_reg: std_logic;
+	signal ready_m1_reg: std_logic;
+	
 begin
 	--Registers
 	process(clk, reset)
@@ -83,11 +80,12 @@ begin
 			frac_denominator_reg<=(others=>'0');
 			fraca_reg<=(others=>'0');
 			fracn_reg<=(others=>'0');
-			expdiff_reg<=(others=>'0');
 			lsb_reg<=0;
 			msba_reg<=0;
 			xi_reg<="00111111100000000000000000000000";
 			d_reg<=(others=>'0');
+			tmp_reg<=(others=>'0');
+			start_m1_reg<='0';
 			
 		elsif(clk'event and clk='1') then
 			state_reg<=state_next;
@@ -101,18 +99,19 @@ begin
 			frac_denominator_reg<=frac_denominator_next;
 			fraca_reg<=fraca_next;
 			fracn_reg<=fracn_next;
-			expdiff_reg<=expdiff_next;
 			lsb_reg<=lsb_next;
 			msba_reg<=msba_next;
 			xi_reg<=xi_next;
 			d_reg<=d_next;
+			tmp_reg<=tmp_next;
+			start_m1_reg<=start_m1_next;
 		end if;
 	end process;
 	-- FSMD next-state logic
 	process (fp1, fp2,
 				sign_numerator_reg, sign_denominator_reg, exp_numerator_reg, exp_denominator_reg,
 				expn_reg, frac_numerator_reg, frac_denominator_reg, fraca_reg,
-				fracn_reg, expdiff_reg, xi_reg, d_reg,
+				fracn_reg, xi_reg, d_reg, tmp_reg, start_m1_reg,
 				lsb_reg, start, state_reg, signn_reg, msba_reg)
 	begin
 		ready <= '0';
@@ -128,10 +127,11 @@ begin
 		frac_denominator_next <= frac_denominator_reg;
 		fraca_next <= fraca_reg;
 		fracn_next <= fracn_reg;
-		expdiff_next <= expdiff_reg;
 		lsb_next <= lsb_reg;
 		xi_next <= xi_reg;
 		d_next <= d_reg;
+		tmp_next <= tmp_reg;
+		start_m1_next <= start_m1_reg;
 		
 		case state_reg is 
 			when idle =>
@@ -162,7 +162,13 @@ begin
 			-- x[i+1] = x[i](2 - d*x[i])
 			-- xi_next <= xi_reg * (2 - d_reg * xi_reg);
 			-- First do d_reg * xi_reg
-
+			if ready_m1_reg = '1' then
+				start_m1_reg <= '1';
+			end if;
+			
+			if done_m1_reg = '1' then
+				state_next <= normalise1;
+			end if;
 
 			when normalise1 =>
 
@@ -178,6 +184,9 @@ begin
 				state_next <= idle;
 		end case;
 	end process;
-
+	fpu32_mul_unit1 : entity work.fpu32_multiply 
+		port map(clk, reset, start_m1_reg, done_m1_reg, ready_m1_reg, d_reg, xi_reg, fp_out);
+--	fpu32_mul_unit2 : entity work.fpu32_multiply
+--		port map(clk, reset, start_m1_reg, done_tick, ready, fp1, fp2, fp_out);
 end divide;
 
