@@ -154,30 +154,32 @@ begin
 				ready<='1';
 				if start_conv='1' then
 
-					
-					
+					fp32_intsect_next<=(others=>'0');
+					fp32_next<=fp32;
+					fp32_exponent_next <= (unsigned(fp32(30 downto 23)) - "01111111");
 					state_next <= assign;
 				end if;
 			when assign =>
 				--We only want to output 8 BCD digits
 				--If the fp32_intsect makes 8 digits, no point doing the fraction.
-				fp32_exponent_next <= (unsigned(fp32_reg(30 downto 23)) - "01111111"); --etc etc
+				--don't know if unsigned can deal with negatives!{   if unsigned
+				--fp32_exponent_next <= (unsigned(fp32_reg(30 downto 23)) - "01111111"); --etc etc this doesn't work YAYAYAYAYAY!
 				--fp32_exponent:=unsigned(fp32_reg(30 downto 23)) - "01111111";
-				if fp32_exponent_next>=0 then --positive exponent (or zero)
-					if fp32_exponent_next<23 then -- Fractional part exists but may not be needed, also no added zeros
-						if fp32_exponent_next=0 then
+				if fp32_exponent_reg>=0 then --positive exponent (or zero)
+					if fp32_exponent_reg<23 then -- Fractional part exists but may not be needed, also no added zeros
+						if fp32_exponent_reg=0 then
 							fp32_intsect_next(0 downto 0) <= "1"; -- zero exponent, so just invisible bit
 							loopcounter_next(0) <= 0; -- One shift for one bit
 							loopcounter_next(1) <= 0; -- No extra zeroes
 						else
-							fp32_intsect_next(to_integer(fp32_exponent_next) downto 0) <= '1' & unsigned(fp32_reg(22 downto (22-to_integer(fp32_exponent_next))));
-							loopcounter_next(0) <= to_integer(fp32_exponent_next); --left shift for the number of bits
+							fp32_intsect_next(to_integer(fp32_exponent_reg) downto 0) <= '1' & unsigned(fp32_reg(22 downto (22-to_integer(fp32_exponent_reg))));
+							loopcounter_next(0) <= to_integer(fp32_exponent_reg); --left shift for the number of bits
 							loopcounter_next(1) <= 0; -- No extra zeroes
 						end if;
 					else -- No fractional part, incl. added zeroes.
 						fp32_intsect_next(23 downto 0) <= '1' & unsigned(fp32_reg(22 downto 0));
 						loopcounter_next(0) <= 23; --left shift for the number of original bits
-						loopcounter_next(1) <= to_integer(fp32_exponent_next)-23; -- Then add some zeroes
+						loopcounter_next(1) <= to_integer(fp32_exponent_reg)-23; -- Then add some zeroes
 					end if;
 					
 					state_next <= bin_2_bcd; --Convert intsect to bcd
