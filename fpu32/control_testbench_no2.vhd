@@ -2,15 +2,15 @@
 -- Company: 
 -- Engineer:
 --
--- Create Date:   18:08:45 03/29/2014
+-- Create Date:   15:16:32 05/10/2014
 -- Design Name:   
--- Module Name:   C:/Users/Vladimir/Documents/GitHub/Calculator/fpu32/sort_testbench.vhd
+-- Module Name:   C:/Users/Vladimir/Documents/GitHub/Calculator/fpu32/control_testbench_no2.vhd
 -- Project Name:  fpu32
 -- Target Device:  
 -- Tool versions:  
 -- Description:   
 -- 
--- VHDL Test Bench Created by ISE for module: fpu32
+-- VHDL Test Bench Created by ISE for module: fpu32_main
 -- 
 -- Dependencies:
 -- 
@@ -32,20 +32,21 @@ USE ieee.std_logic_1164.ALL;
 -- arithmetic functions with Signed or Unsigned values
 --USE ieee.numeric_std.ALL;
  
-ENTITY sort_testbench IS
-END sort_testbench;
+ENTITY control_testbench_no2 IS
+END control_testbench_no2;
  
-ARCHITECTURE behavior OF sort_testbench IS 
+ARCHITECTURE behavior OF control_testbench_no2 IS 
  
     -- Component Declaration for the Unit Under Test (UUT)
  
-    COMPONENT fpu32
+    COMPONENT fpu32_main
     PORT(
          clk : IN  std_logic;
          reset : IN  std_logic;
          start : IN  std_logic;
          done_tick : OUT  std_logic;
          ready : OUT  std_logic;
+         op_type : IN  std_logic_vector(1 downto 0);
          fp1 : IN  std_logic_vector(31 downto 0);
          fp2 : IN  std_logic_vector(31 downto 0);
          fp_out : OUT  std_logic_vector(31 downto 0)
@@ -57,6 +58,7 @@ ARCHITECTURE behavior OF sort_testbench IS
    signal clk : std_logic := '0';
    signal reset : std_logic := '0';
    signal start : std_logic := '0';
+   signal op_type : std_logic_vector(1 downto 0) := (others => '0');
    signal fp1 : std_logic_vector(31 downto 0) := (others => '0');
    signal fp2 : std_logic_vector(31 downto 0) := (others => '0');
 
@@ -71,12 +73,13 @@ ARCHITECTURE behavior OF sort_testbench IS
 BEGIN
  
 	-- Instantiate the Unit Under Test (UUT)
-   uut: fpu32 PORT MAP (
+   uut: fpu32_main PORT MAP (
           clk => clk,
           reset => reset,
           start => start,
           done_tick => done_tick,
           ready => ready,
+          op_type => op_type,
           fp1 => fp1,
           fp2 => fp2,
           fp_out => fp_out
@@ -103,36 +106,21 @@ BEGIN
 		wait until falling_edge(clk);
 		wait until falling_edge(clk);
 		start <= '1';
+		op_type<="00";
 		fp1 <= "01000000000000000000000000000000"; --2
-		fp2 <= "10111111010000000000000000000000"; -- -0.75
+		fp2 <= "01000000000000000000000000000000"; --2
 		
 		wait for clk_period;
 		start <= '0';
-		wait for clk_period*10;
-		wait until falling_edge(clk);
-		wait until falling_edge(clk);
+		wait for clk_period*20;
+		
 		start <= '1';
-		fp1 <= "01000000101000000000000000000000"; --5
-		fp2 <= "01000000101000000000000000000000"; --5
-		wait for clk_period;
-		start <= '0';
-		wait for clk_period*10;
-
-		start <= '1';
+		op_type<="01";
 		fp1 <= "01000001101000000000000000000000"; --20
 		fp2 <= "01000010110010000000000000000000"; --100
 		wait for clk_period;
 		start <= '0';
-		wait for clk_period*10;
-		start <= '1';
-		fp1 <= "01000000000000000000000000000000"; --2
-		fp2 <= "00111110100000000000000000000000"; --0.25
-		wait for clk_period;
-		start <= '0';
-		wait for clk_period*10;
-		
-		assert false
-		severity failure;
+		wait for clk_period*20;
    end process;
 
 END;

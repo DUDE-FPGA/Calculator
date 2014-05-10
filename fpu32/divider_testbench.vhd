@@ -2,15 +2,15 @@
 -- Company: 
 -- Engineer:
 --
--- Create Date:   18:08:45 03/29/2014
+-- Create Date:   16:41:58 05/10/2014
 -- Design Name:   
--- Module Name:   C:/Users/Vladimir/Documents/GitHub/Calculator/fpu32/sort_testbench.vhd
+-- Module Name:   C:/Users/Vladimir/Documents/GitHub/Calculator/fpu32/divider_testbench.vhd
 -- Project Name:  fpu32
 -- Target Device:  
 -- Tool versions:  
 -- Description:   
 -- 
--- VHDL Test Bench Created by ISE for module: fpu32
+-- VHDL Test Bench Created by ISE for module: fpu32_divider
 -- 
 -- Dependencies:
 -- 
@@ -32,14 +32,14 @@ USE ieee.std_logic_1164.ALL;
 -- arithmetic functions with Signed or Unsigned values
 --USE ieee.numeric_std.ALL;
  
-ENTITY sort_testbench IS
-END sort_testbench;
+ENTITY divider_testbench IS
+END divider_testbench;
  
-ARCHITECTURE behavior OF sort_testbench IS 
+ARCHITECTURE behavior OF divider_testbench IS 
  
     -- Component Declaration for the Unit Under Test (UUT)
  
-    COMPONENT fpu32
+    COMPONENT fpu32_divider
     PORT(
          clk : IN  std_logic;
          reset : IN  std_logic;
@@ -71,7 +71,7 @@ ARCHITECTURE behavior OF sort_testbench IS
 BEGIN
  
 	-- Instantiate the Unit Under Test (UUT)
-   uut: fpu32 PORT MAP (
+   uut: fpu32_divider PORT MAP (
           clk => clk,
           reset => reset,
           start => start,
@@ -104,33 +104,11 @@ BEGIN
 		wait until falling_edge(clk);
 		start <= '1';
 		fp1 <= "01000000000000000000000000000000"; --2
-		fp2 <= "10111111010000000000000000000000"; -- -0.75
+		fp2 <= "01000000000000000000000000000000"; --2
 		
 		wait for clk_period;
 		start <= '0';
-		wait for clk_period*10;
-		wait until falling_edge(clk);
-		wait until falling_edge(clk);
-		start <= '1';
-		fp1 <= "01000000101000000000000000000000"; --5
-		fp2 <= "01000000101000000000000000000000"; --5
-		wait for clk_period;
-		start <= '0';
-		wait for clk_period*10;
-
-		start <= '1';
-		fp1 <= "01000001101000000000000000000000"; --20
-		fp2 <= "01000010110010000000000000000000"; --100
-		wait for clk_period;
-		start <= '0';
-		wait for clk_period*10;
-		start <= '1';
-		fp1 <= "01000000000000000000000000000000"; --2
-		fp2 <= "00111110100000000000000000000000"; --0.25
-		wait for clk_period;
-		start <= '0';
-		wait for clk_period*10;
-		
+		wait for clk_period*500;
 		assert false
 		severity failure;
    end process;
