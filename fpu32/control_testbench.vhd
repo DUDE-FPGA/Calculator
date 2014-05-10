@@ -111,7 +111,7 @@ BEGIN
 		
 		wait for clk_period;
 		start <= '0';
-		wait for clk_period*10;
+		wait for clk_period*20;
    end process;
 
 END;
