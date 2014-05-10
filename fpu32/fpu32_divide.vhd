@@ -86,6 +86,8 @@ begin
 			d_reg<=(others=>'0');
 			tmp_reg<=(others=>'0');
 			start_m1_reg<='0';
+			done_m1_reg <= '0';
+			ready_m1_reg <= '0';
 			
 		elsif(clk'event and clk='1') then
 			state_reg<=state_next;
