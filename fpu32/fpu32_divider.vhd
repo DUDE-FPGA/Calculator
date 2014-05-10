@@ -78,35 +78,28 @@ begin
 		port map(clk, reset, start_multi2_reg, multi2_done, multi2_ready, fp1, fp2, multi2_out);		
 		-- FSMD next-state logic
 	
-	process (fp1, fp2, op_type, start_adder_reg, start_multi_reg, state_reg, 
-	adder_ready, adder_done, multi1_ready, multi1_done, mutli2_ready, multi2_done)
+	process (fp1, fp2, start_adder_reg, start_multi1_reg, start_multi2_reg, state_reg, 
+	adder_ready, adder_done, multi1_ready, multi1_done, multi2_ready, multi2_done)
 	begin
 		ready<='0';
-		--done_tick<='0';
 		state_next<=state_reg;
 		start_adder_next<=start_adder_reg;
-		start_multi_next<=start_multi_reg;
+		start_multi1_next<=start_multi1_reg;
+		start_multi2_next<=start_multi2_reg;
 		done_tick<='0';
 		case state_reg is
 			when idle =>
 				ready<='1';
 				if start='1' then 
-					state_next<=op;
+					state_next<=multi1;
 				end if;
 			
-			when mutli1 =>
+			when multi1 =>
 			when subtract =>
 			when multi2 =>
 			when done =>
-				-- Output based on operation type
-				if op_type="00" then 
-					fp_out<=adder_out;
-				elsif op_type="01" then
-					fp_out<=multi_out;
-				end if;
 				done_tick<='1';
 				state_next<=idle;
-				
 		end case;
 	end process;
 	
