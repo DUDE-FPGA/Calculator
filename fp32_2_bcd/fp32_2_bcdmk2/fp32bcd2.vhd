@@ -172,7 +172,7 @@ begin
 							loopcounter_next(0) <= 0; -- One shift for one bit
 							loopcounter_next(1) <= 0; -- No extra zeroes
 						else
-							fp32_intsect_next(to_integer(fp32_exponent_reg) downto 0) <= '1' & unsigned(fp32_reg(22 downto (22-to_integer(fp32_exponent_reg))));
+							fp32_intsect_next(to_integer(fp32_exponent_reg) downto 0) <= '1' & unsigned(fp32_reg(22 downto (23-to_integer(fp32_exponent_reg))));
 							loopcounter_next(0) <= to_integer(fp32_exponent_reg); --left shift for the number of bits
 							loopcounter_next(1) <= 0; -- No extra zeroes
 						end if;
