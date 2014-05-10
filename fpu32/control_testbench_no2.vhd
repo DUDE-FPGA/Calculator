@@ -2,9 +2,9 @@
 -- Company: 
 -- Engineer:
 --
--- Create Date:   13:33:17 05/10/2014
+-- Create Date:   15:16:32 05/10/2014
 -- Design Name:   
--- Module Name:   C:/Users/Vladimir/Documents/GitHub/Calculator/fpu32/control_testbench.vhd
+-- Module Name:   C:/Users/Vladimir/Documents/GitHub/Calculator/fpu32/control_testbench_no2.vhd
 -- Project Name:  fpu32
 -- Target Device:  
 -- Tool versions:  
@@ -32,10 +32,10 @@ USE ieee.std_logic_1164.ALL;
 -- arithmetic functions with Signed or Unsigned values
 --USE ieee.numeric_std.ALL;
  
-ENTITY control_testbench IS
-END control_testbench;
+ENTITY control_testbench_no2 IS
+END control_testbench_no2;
  
-ARCHITECTURE behavior OF control_testbench IS 
+ARCHITECTURE behavior OF control_testbench_no2 IS 
  
     -- Component Declaration for the Unit Under Test (UUT)
  
@@ -106,6 +106,7 @@ BEGIN
 		wait until falling_edge(clk);
 		wait until falling_edge(clk);
 		start <= '1';
+		op_type<="00";
 		fp1 <= "01000000000000000000000000000000"; --2
 		fp2 <= "01000000000000000000000000000000"; --2
 		
@@ -114,11 +115,12 @@ BEGIN
 		wait for clk_period*20;
 		
 		start <= '1';
+		op_type<="01";
 		fp1 <= "01000001101000000000000000000000"; --20
 		fp2 <= "01000010110010000000000000000000"; --100
 		wait for clk_period;
 		start <= '0';
-		wait for clk_period*10;
+		wait for clk_period*20;
    end process;
 
 END;
