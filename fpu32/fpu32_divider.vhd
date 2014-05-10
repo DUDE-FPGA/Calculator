@@ -116,7 +116,7 @@ begin
 					state_next<=assign;
 				end if;
 			when assign =>
-				d_next <= "0011111101" & fp2(21 downto 0);
+				d_next <= "101111110" & fp2(22 downto 0);
 				xi_next <= FP_1;
 				state_next <= multi1;
 			when multi1 =>

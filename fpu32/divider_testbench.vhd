@@ -108,7 +108,9 @@ BEGIN
 		
 		wait for clk_period;
 		start <= '0';
-		wait for clk_period*100;
+		wait for clk_period*500;
+		assert false
+		severity failure;
    end process;
 
 END;
