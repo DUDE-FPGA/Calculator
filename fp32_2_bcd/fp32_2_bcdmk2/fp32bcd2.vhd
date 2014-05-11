@@ -176,6 +176,10 @@ begin
 							loopcounter_next(0) <= to_integer(fp32_exponent_reg); --left shift for the number of bits
 							loopcounter_next(1) <= 0; -- No extra zeroes
 						end if;
+						--push to fractional decode
+						--first need to finish LHS bcd conversion.
+						--thence push to assign_frac after LHS output
+						--state_next <= assign_frac
 					else -- No fractional part, incl. added zeroes.
 						fp32_intsect_next(23 downto 0) <= '1' & unsigned(fp32_reg(22 downto 0));
 						loopcounter_next(0) <= 23; --left shift for the number of original bits
@@ -251,13 +255,15 @@ begin
 					for i in 7 downto 7-outcount loop
 						bcd_next(i)<=std_logic_vector(bcdOPdat_reg(outcount-(7-i)));
 					end loop;
-					done_tick <= '1';
-					state_next <= idle;
+					
+					state_next <= assign_frac;
+					
 				else
 					for i in 7 downto 0 loop
 						bcd_next(i)<=std_logic_vector(bcdOPdat_reg(outcount-(7-i)));
 					end loop;
-					state_next <= assign_frac;
+					done_tick <= '1';
+					state_next <= idle;
 				end if;
 					--Output remaining as exp
 				--done_tick <= '1';
