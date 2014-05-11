@@ -168,7 +168,7 @@ begin
 				if fp32_exponent_reg>=0 then --positive exponent (or zero)
 					if fp32_exponent_reg<23 then -- Fractional part exists but may not be needed, also no added zeros
 						if fp32_exponent_reg=0 then
-							fp32_intsect_next(0 downto 0) <= "1"; -- zero exponent, so just invisible bit
+							fp32_intsect_next(23 downto 23) <= "1"; -- zero exponent, so just invisible bit
 							loopcounter_next(0) <= 0; -- One shift for one bit
 							loopcounter_next(1) <= 0; -- No extra zeroes
 						else
