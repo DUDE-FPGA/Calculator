@@ -154,30 +154,32 @@ begin
 				ready<='1';
 				if start_conv='1' then
 
-					
-					
+					fp32_intsect_next<=(others=>'0');
+					fp32_next<=fp32;
+					fp32_exponent_next <= (unsigned(fp32(30 downto 23)) - "01111111");
 					state_next <= assign;
 				end if;
 			when assign =>
 				--We only want to output 8 BCD digits
 				--If the fp32_intsect makes 8 digits, no point doing the fraction.
-				fp32_exponent_next <= (unsigned(fp32_reg(30 downto 23)) - "01111111"); --etc etc
+				--don't know if unsigned can deal with negatives!{   if unsigned
+				--fp32_exponent_next <= (unsigned(fp32_reg(30 downto 23)) - "01111111"); --etc etc this doesn't work YAYAYAYAYAY!
 				--fp32_exponent:=unsigned(fp32_reg(30 downto 23)) - "01111111";
-				if fp32_exponent_next>=0 then --positive exponent (or zero)
-					if fp32_exponent_next<23 then -- Fractional part exists but may not be needed, also no added zeros
-						if fp32_exponent_next=0 then
-							fp32_intsect_next(0 downto 0) <= '1'; -- zero exponent, so just invisible bit
-							loopcounter_next(0) <= '0'; -- One shift for one bit
+				if fp32_exponent_reg>=0 then --positive exponent (or zero)
+					if fp32_exponent_reg<23 then -- Fractional part exists but may not be needed, also no added zeros
+						if fp32_exponent_reg=0 then
+							fp32_intsect_next(0 downto 0) <= "1"; -- zero exponent, so just invisible bit
+							loopcounter_next(0) <= 0; -- One shift for one bit
 							loopcounter_next(1) <= 0; -- No extra zeroes
 						else
-							fp32_intsect_next(to_integer(fp32_exponent_next) downto 0) <= '1' & unsigned(fp32_reg(22 downto (22-to_integer(fp32_exponent_next))));
-							loopcounter_next(0) <= to_integer(fp32_exponent_next); --left shift for the number of bits
+							fp32_intsect_next(to_integer(fp32_exponent_reg) downto 0) <= '1' & unsigned(fp32_reg(22 downto (22-to_integer(fp32_exponent_reg))));
+							loopcounter_next(0) <= to_integer(fp32_exponent_reg); --left shift for the number of bits
 							loopcounter_next(1) <= 0; -- No extra zeroes
 						end if;
 					else -- No fractional part, incl. added zeroes.
 						fp32_intsect_next(23 downto 0) <= '1' & unsigned(fp32_reg(22 downto 0));
 						loopcounter_next(0) <= 23; --left shift for the number of original bits
-						loopcounter_next(1) <= to_integer(fp32_exponent_next)-23; -- Then add some zeroes
+						loopcounter_next(1) <= to_integer(fp32_exponent_reg)-23; -- Then add some zeroes
 					end if;
 					
 					state_next <= bin_2_bcd; --Convert intsect to bcd
@@ -209,19 +211,21 @@ begin
 				-- Draw digit from mantissa
 				bcdOPdat_next(0)<=bcdOPdat_reg(0) sll 1;
 				if fp32_exponent_reg < 24 then
-					
+				--exponent is less than 24 (23 or lower)
 				else
-				if loopcounter_reg(0)<1 AND loopcounter_reg(1)<1 then
-					bcdOPdat_next(0)(0)<=fp32_intsect_reg(loopcounter_reg(0)); -- Don't forget the last value
-					state_next<=done;
-				elsif loopcounter_reg(1)>0 AND loopcounter_reg(0)<1 then --ADD EXTRA ZEROES
-					bcdOPdat_next(0)(0)<='0';
-					loopcounter_next(1) <= loopcounter_reg(1)-1;
-					state_next<=check_five; -- scan for BCD values > 4, add 3.
-				elsif loopcounter_reg(0)>0 then --PULL FROM INTSECT
-					bcdOPdat_next(0)(0)<=fp32_intsect_reg(loopcounter_reg(0));
-					loopcounter_next(0) <= loopcounter_reg(0)-1;
-					state_next<=check_five; -- scan for BCD values > 4, add 3.
+				--exponent is greater than or equal to 24	
+					if loopcounter_reg(0)<1 AND loopcounter_reg(1)<1 then
+						bcdOPdat_next(0)(0)<=fp32_intsect_reg(loopcounter_reg(0)); -- Don't forget the last value
+						state_next<=done;
+					elsif loopcounter_reg(1)>0 AND loopcounter_reg(0)<1 then --ADD EXTRA ZEROES
+						bcdOPdat_next(0)(0)<='0';
+						loopcounter_next(1) <= loopcounter_reg(1)-1;
+						state_next<=check_five; -- scan for BCD values > 4, add 3.
+					elsif loopcounter_reg(0)>0 then --PULL FROM INTSECT
+						bcdOPdat_next(0)(0)<=fp32_intsect_reg(loopcounter_reg(0));
+						loopcounter_next(0) <= loopcounter_reg(0)-1;
+						state_next<=check_five; -- scan for BCD values > 4, add 3.
+					end if;
 				end if;
 			when check_five =>
 				for i in 38 downto 0 loop
@@ -236,25 +240,30 @@ begin
 				--Find furthest left BCD digit that is non-zero
 				outcount:=0;
 				for i in 38 downto 0 loop
-					if bcdOPdat_reg(i)!="0000" then
+					if not bcdOPdat_reg(i)="0000" then
 						outcount:=i;
 						exit;
 					end if;
 				end loop;
 				--FOUND
-				--Check to see if fraction is needed, assign part of answer if yes, if no assign full answer and finish
+				--Check to see if fraction is needed, assign part of answer if yes, if no, assign full answer and finish
 				if outcount<7 then --outcount less than 7, therefore less than 8 digits, output first part, then go do fractional section.
 					for i in 7 downto 7-outcount loop
 						bcd_next(i)<=std_logic_vector(bcdOPdat_reg(outcount-(7-i)));
 					end loop;
+					done_tick <= '1';
+					state_next <= idle;
 				else
 					for i in 7 downto 0 loop
 						bcd_next(i)<=std_logic_vector(bcdOPdat_reg(outcount-(7-i)));
 					end loop;
+					state_next <= assign_frac;
+				end if;
 					--Output remaining as exp
-				done_tick <= '1';
-				state_next <= idle;
-	end case;
+				--done_tick <= '1';
+				
+		end case;
+		
 	end process;
 	bcds <= bcd_reg;
 	sign <= sign_reg;
