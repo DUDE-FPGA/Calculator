@@ -1,8 +1,0 @@
-INTSTYLE=impact
-INFILE=/mnt/linux-data/opt/xilinx/projects/1.1/impact.xsl
-OUTFILE=/mnt/linux-data/opt/xilinx/projects/1.1/impact.xsl
-FAMILY=Single
-PART=Single
-WORKINGDIR=/mnt/linux-data/opt/xilinx/projects/1.1
-LICENSE=iMPACT
-USER_INFO=iMPACT

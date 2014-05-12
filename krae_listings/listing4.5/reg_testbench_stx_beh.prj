@@ -1,2 +1,0 @@
-vhdl isim_temp "reg_reset.vhd"
-vhdl isim_temp "reg_testbench.vhd"

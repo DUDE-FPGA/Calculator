@@ -1,2 +1,0 @@
-vhdl work "netgen/translate/stop_watch_translate.vhd"
-vhdl work "stopwatch_testbench.vhd"

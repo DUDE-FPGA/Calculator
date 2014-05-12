@@ -1,1 +1,0 @@
--intstyle "ise" -incremental -o "/mnt/linux-data/opt/xilinx/projects/listing3.14/signmag_testbench_isim_beh.exe" -prj "/mnt/linux-data/opt/xilinx/projects/listing3.14/signmag_testbench_beh.prj" "work.signmag_testbench" 

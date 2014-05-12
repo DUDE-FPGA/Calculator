@@ -1,2 +1,0 @@
-vhdl isim_temp "free_run_shift_reg.vhd"
-vhdl isim_temp "shift_testbench.vhd"
