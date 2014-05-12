@@ -108,7 +108,35 @@ BEGIN
 		
 		wait for clk_period;
 		start <= '0';
-		wait for clk_period*500;
+		wait for clk_period*250;
+		
+		reset <= '1';
+		wait for clk_period;
+		reset <= '0';
+		wait for clk_period;
+		wait until falling_edge(clk);
+		wait until falling_edge(clk);
+		start <= '1';
+		fp1 <= "01000000101000000000000000000000"; --5
+		fp2 <= "01000000000000000000000000000000"; --2
+		
+		wait for clk_period;
+		start <= '0';
+		wait for clk_period*250;
+		
+		reset <= '1';
+		wait for clk_period;
+		reset <= '0';
+		wait for clk_period;
+		wait until falling_edge(clk);
+		wait until falling_edge(clk);
+		start <= '1';
+		fp1 <= "01000001001000000000000000000000"; --10
+		fp2 <= "01000000101000000000000000000000"; --5
+		
+		wait for clk_period;
+		start <= '0';
+		wait for clk_period*250;
 		assert false
 		severity failure;
    end process;
