@@ -148,10 +148,10 @@ begin
 				end if;
 				
 				-- Loop states 10 times
-				if multi2_done='1' and newt_counter_reg<11 then
+				if multi2_done='1' and newt_counter_reg<6 then
 					state_next<=multi1;
 					xi_next<=multi2_out;
-				elsif multi2_done='1' and newt_counter_reg>10 then
+				elsif multi2_done='1' and newt_counter_reg>5 then
 					state_next<=done;
 				end if;
 			when done =>
