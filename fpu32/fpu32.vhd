@@ -167,7 +167,7 @@ begin
 				elsif (sum_reg(24 downto 23) = "00") then
 					for i in 0 to 23 loop
 						if sum_reg(23-i)='1' then
-							lead0_next <= to_unsigned(i,6) - "000001";
+							lead0_next <= to_unsigned(i,6) - "000010"; -- Seems to be overcounting here for some reason
 						end if;
 						exit when sum_reg(i)='1';
 					end loop;
@@ -190,6 +190,7 @@ begin
 					fp_out <= signb_reg & std_logic_vector(expn_reg) & std_logic_vector(fracn_reg);
 					state_next <= done;
 			when done =>
+				lead0_next<="000000";
 				done_tick <= '1';
 				state_next <= idle;
 		end case;
