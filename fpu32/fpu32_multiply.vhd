@@ -1,6 +1,6 @@
 ----------------------------------------------------------------------------------
 -- Company: 
--- Engineer: 
+-- Engineer: Vladimir Shulyak
 -- 
 -- Create Date:    15:33:41 04/25/2014 
 -- Design Name: 

@@ -39,7 +39,7 @@ end fpu32;
 architecture fpu32_arch of fpu32 is
 	--Register definitions
 	type state_type is (idle, sort, align1, align2, maths, normalise1, 
-							  normalise2, normalise3, output, done);
+							  normalise2, normalise3, normalise4, output, done);
 	signal state_reg, state_next: state_type;
 	-- b - big, s - small, a - aligned, n - normalised
 	signal signb_reg, signb_next: std_logic;
@@ -164,32 +164,42 @@ begin
 				if (sum_reg(24) = '1') then
 					sumn_next <= sum_reg(23 downto 0) srl 1;
 					expn_next <= expb_reg + "00000001";
+					state_next<=normalise3;
 				elsif (sum_reg(24 downto 23) = "00") then
-					for i in 0 to 23 loop
-						if sum_reg(23-i)='1' then
-							lead0_next <= to_unsigned(i,6) - "000001";
-						end if;
-						exit when sum_reg(i)='1';
-					end loop;
+--					for i in 0 to 23 loop
+--						if sum_reg(23-i)='1' then
+--							lead0_next <= to_unsigned(i,6); -- Seems to be overcounting here for some reason
+--						end if;
+--						exit when sum_reg(i)='1';
+--					end loop;
+					state_next <= normalise2;
+
 				else
 					sumn_next <= sum_reg(23 downto 0);
 					expn_next <= expb_reg;
+					state_next<=normalise3;
 				end if;
-				state_next <= normalise2;
 			when normalise2 =>
+				if sum_reg(23 - to_integer(lead0_reg)) = '1' then
+					state_next<=normalise3;
+				else
+					lead0_next<=lead0_reg+"000001";
+				end if;
+			when normalise3 =>
 				if (lead0_reg > "000000") then
 					sumn_next <= sum_reg(23 downto 0) sll to_integer(lead0_reg);
 					expn_next <= expb_reg - ("00" & lead0_reg);
 				end if;
-				state_next <= normalise3;
+				state_next <= normalise4;
 			-- Prepare outputs
-			when normalise3 =>
+			when normalise4 =>
 				fracn_next <= sumn_reg(22 downto 0);
 				state_next <= output;
 			when output =>
 					fp_out <= signb_reg & std_logic_vector(expn_reg) & std_logic_vector(fracn_reg);
 					state_next <= done;
 			when done =>
+				lead0_next<="000000";
 				done_tick <= '1';
 				state_next <= idle;
 		end case;

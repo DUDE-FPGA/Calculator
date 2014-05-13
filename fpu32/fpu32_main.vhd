@@ -48,6 +48,10 @@ architecture control of fpu32_main is
 	signal start_multi_reg, start_multi_next: std_logic;
 	signal multi_ready, multi_done: std_logic;
 	signal multi_out: std_logic_vector(31 downto 0);
+	-- Divider signals
+	signal start_divide_reg, start_divide_next: std_logic;
+	signal divide_ready, divide_done: std_logic;
+	signal divide_out: std_logic_vector(31 downto 0);
 	
 begin
 	--Registers
@@ -57,11 +61,13 @@ begin
 			state_reg<=idle;
 			start_adder_reg<='0';
 			start_multi_reg<='0';
+			start_divide_reg<='0';
 			
 		elsif(clk'event and clk='1') then
 			state_reg<=state_next;
 			start_adder_reg<=start_adder_next;
 			start_multi_reg<=start_multi_next;
+			start_divide_reg<=start_divide_next;
 			
 		end if;
 	end process;
@@ -71,10 +77,12 @@ begin
 		port map(clk, reset, start_adder_reg, adder_done, adder_ready, fp1, fp2, adder_out);
 	fpu32_multi : entity work.fpu32_multiply
 		port map(clk, reset, start_multi_reg, multi_done, multi_ready, fp1, fp2, multi_out);
+	fpu32_divide : entity work.fpu32_divider
+		port map(clk, reset, start_divide_reg, divide_done, divide_ready, fp1, fp2, divide_out);
 	
 	-- FSMD next-state logic
-	process (fp1, fp2, op_type, start_adder_reg, start_multi_reg, state_reg, 
-	adder_ready, adder_done, multi_ready, multi_done)
+	process (fp1, fp2, op_type, start_adder_reg, start_multi_reg, start_divide_reg, state_reg, 
+	adder_ready, adder_done, multi_ready, multi_done, divide_ready, divide_done)
 	begin
 		ready<='0';
 		--done_tick<='0';
@@ -98,13 +106,15 @@ begin
 					start_adder_next<='1';
 				elsif op_type="01" and multi_ready='1' then
 					start_multi_next<='1';
-				elsif op_type="10" then
+				elsif op_type="10" and divide_ready='1' then
+					start_divide_next<='1';
 				else
 					start_adder_next<='0';
 					start_multi_next<='0';
+					start_divide_next<='0';
 				end if;
 				
-				if adder_done='1' or multi_done='1' then
+				if adder_done='1' or multi_done='1' or divide_done='1' then
 					state_next<=done;
 				end if;
 				
@@ -114,6 +124,8 @@ begin
 					fp_out<=adder_out;
 				elsif op_type="01" then
 					fp_out<=multi_out;
+				elsif op_type="10" then
+					fp_out<=divide_out;
 				end if;
 				done_tick<='1';
 				state_next<=idle;

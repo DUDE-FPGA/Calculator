@@ -1,2 +1,0 @@
-vhdl isim_temp "fp_adder.vhd"
-vhdl isim_temp "floating_testbench.vhd"

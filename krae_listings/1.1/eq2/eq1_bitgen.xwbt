@@ -1,8 +1,0 @@
-INTSTYLE=ise
-INFILE=/mnt/linux-data/opt/xilinx/projects/1.1/eq2/eq1.ncd
-OUTFILE=/mnt/linux-data/opt/xilinx/projects/1.1/eq2/eq1.bit
-FAMILY=Spartan3
-PART=xc3s200-5ft256
-WORKINGDIR=/mnt/linux-data/opt/xilinx/projects/1.1/eq2
-LICENSE=WebPack
-USER_INFO=210858152_0_0_833

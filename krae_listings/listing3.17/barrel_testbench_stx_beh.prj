@@ -1,2 +1,0 @@
-vhdl isim_temp "barrel_shifter.vhd"
-vhdl isim_temp "barrel_testbench.vhd"

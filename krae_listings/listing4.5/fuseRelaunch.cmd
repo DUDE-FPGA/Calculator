@@ -1,1 +1,0 @@
--intstyle "ise" -incremental -lib "secureip" -o "/mnt/linux-data/opt/xilinx/projects/listing4.5/reg_testbench_isim_beh.exe" -prj "/mnt/linux-data/opt/xilinx/projects/listing4.5/reg_testbench_beh.prj" "work.reg_testbench" 

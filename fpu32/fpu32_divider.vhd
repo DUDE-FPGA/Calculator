@@ -1,6 +1,6 @@
 ----------------------------------------------------------------------------------
 -- Company: 
--- Engineer: 
+-- Engineer: Vladimir Shulyak
 -- 
 -- Create Date:    15:33:13 05/10/2014 
 -- Design Name: 
@@ -37,8 +37,12 @@ entity fpu32_divider is
 end fpu32_divider;
 
 architecture divide of fpu32_divider is
-	type state_type is (idle, assign, multi1, subtract, multi2, done);
+	type state_type is (idle, assign, multi1, subtract, multi2, multi3, done);
 	signal state_reg, state_next: state_type;
+	signal fp1_mantissa_reg, fp1_mantissa_next: std_logic_vector(31 downto 0);
+	signal exp_out_reg, exp_out_next: unsigned(7 downto 0);
+	signal sign_out_reg, sign_out_next: std_logic;
+	
 	-- Adder signals
 	signal start_adder_reg, start_adder_next: std_logic;
 	signal adder_ready, adder_done: std_logic;
@@ -52,10 +56,14 @@ architecture divide of fpu32_divider is
 	signal start_multi2_reg, start_multi2_next: std_logic;
 	signal multi2_ready, multi2_done: std_logic;
 	signal multi2_out: std_logic_vector(31 downto 0);
+
+	signal start_multi3_reg, start_multi3_next: std_logic;
+	signal multi3_ready, multi3_done: std_logic;
+	signal multi3_out: std_logic_vector(31 downto 0);
 	
 	--Newton Raphson signals
 	signal xi_reg, xi_next: std_logic_vector(31 downto 0);
-	signal d_reg, d_next: std_logic_vector(31 downto 0);
+	signal d_reg, d_next: std_logic_vector(31 downto 0); -- Mantissa of divisor
 	signal newt_counter_reg, newt_counter_next: integer;
 	constant FP_1:
 		std_logic_vector(31 downto 0):= "00111111100000000000000000000000"; -- No. 1 in FP format
@@ -71,18 +79,26 @@ begin
 			start_adder_reg<='0';
 			start_multi1_reg<='0';
 			start_multi2_reg<='0';
+			start_multi3_reg<='0';
 			xi_reg<=(others=>'0');
 			d_reg<=(others=>'0');
 			newt_counter_reg<=0;
+			fp1_mantissa_reg<=(others=>'0');
+			exp_out_reg<=(others=>'0');
+			sign_out_reg<='0';
 			
 		elsif(clk'event and clk='1') then
 			state_reg<=state_next;
 			start_adder_reg<=start_adder_next;
 			start_multi1_reg<=start_multi1_next;
 			start_multi2_reg<=start_multi2_next;
+			start_multi3_reg<=start_multi3_next;
 			xi_reg<=xi_next;
 			d_reg<=d_next;
 			newt_counter_reg<=newt_counter_next;
+			fp1_mantissa_reg<=fp1_mantissa_next;
+			exp_out_reg<=exp_out_next;
+			sign_out_reg<=sign_out_next;
 		end if;
 	end process;
 	
@@ -92,23 +108,29 @@ begin
 	fpu32_multi1 : entity work.fpu32_multiply
 		port map(clk, reset, start_multi1_reg, multi1_done, multi1_ready, d_reg, xi_reg, multi1_out);
 	fpu32_multi2 : entity work.fpu32_multiply
-		port map(clk, reset, start_multi2_reg, multi2_done, multi2_ready, xi_reg, adder_out, multi2_out);		
+		port map(clk, reset, start_multi2_reg, multi2_done, multi2_ready, xi_reg, adder_out, multi2_out);	
+	fpu32_multi3 : entity work.fpu32_multiply
+		port map(clk, reset, start_multi3_reg, multi3_done, multi3_ready, multi2_out, fp1_mantissa_reg, multi3_out);
 	
 	-- FSMD next-state logic
-	-- multi1, subtract and multi2 are newton-raphson states. The chain loops 10 times.
-	process (fp1, fp2, start_adder_reg, start_multi1_reg, start_multi2_reg, state_reg, 
+	-- multi1, subtract and multi2 are newton-raphson states. The chain loops 5 times.
+	process (fp1, fp2, start_adder_reg, start_multi1_reg, start_multi2_reg, start_multi3_reg, state_reg, 
 	adder_ready, adder_done, multi1_ready, multi1_done, multi2_ready, multi2_done,
-	xi_reg, d_reg, newt_counter_reg)
+	multi3_ready, multi3_done, xi_reg, d_reg, newt_counter_reg, sign_out_reg, exp_out_reg)
 	begin
 		ready<='0';
 		state_next<=state_reg;
 		start_adder_next<=start_adder_reg;
 		start_multi1_next<=start_multi1_reg;
 		start_multi2_next<=start_multi2_reg;
+		start_multi3_next<=start_multi3_reg;
 		xi_next<=xi_reg;
 		d_next<=d_reg;
 		newt_counter_next<=newt_counter_reg;
 		done_tick<='0';
+		fp1_mantissa_next<=fp1_mantissa_reg;
+		sign_out_next<=sign_out_reg;
+		exp_out_next<=exp_out_reg;
 		case state_reg is
 			when idle =>
 				ready<='1';
@@ -116,9 +138,17 @@ begin
 					state_next<=assign;
 				end if;
 			when assign =>
-				d_next <= "101111110" & fp2(22 downto 0);
-				xi_next <= FP_1;
+				fp1_mantissa_next <= "001111110" & fp1(22 downto 0);
+				d_next <= "101111110" & fp2(22 downto 0); --assign divisor mantissa and make FP format
+				xi_next <= FP_1; --Initial guess for Newton Raphson
+				sign_out_next<=fp1(31) xor fp2(31); --Check resultant sign
+				exp_out_next<=
+					(unsigned(fp1(30 downto 23))-"01111111") 
+					- (unsigned(fp2(30 downto 23))-"01111111") + "01111111";
 				state_next <= multi1;
+			--------------------------------------
+			-- Beginning of Newton Raphson Loop --
+			--------------------------------------
 			when multi1 =>
 				if multi1_ready='1' then
 					start_multi1_next<='1';
@@ -147,15 +177,30 @@ begin
 					start_multi2_next<='0';
 				end if;
 				
-				-- Loop states 10 times
-				if multi2_done='1' and newt_counter_reg<11 then
+				-- Loop states 5 times
+				if multi2_done='1' and newt_counter_reg<6 then
 					state_next<=multi1;
 					xi_next<=multi2_out;
-				elsif multi2_done='1' and newt_counter_reg>10 then
+				elsif multi2_done='1' and newt_counter_reg>5 then
+					state_next<=multi3;
+				end if;
+			--------------------------------------
+			--     End of Newton Raphson Loop   --
+			--------------------------------------				
+
+			-- Multiply fp1 mantissa and the result of Newton Raphson
+			when multi3 => 
+				if multi3_ready='1' then
+					start_multi3_next<='1';
+				elsif multi3_ready='0' then
+					start_multi3_next<='0';
+				end if;
+				
+				if multi3_done='1' then
 					state_next<=done;
 				end if;
 			when done =>
-				fp_out<=multi2_out;
+				fp_out<= sign_out_reg & std_logic_vector(exp_out_reg) & multi3_out(22 downto 0);
 				done_tick<='1';
 				state_next<=idle;
 		end case;
