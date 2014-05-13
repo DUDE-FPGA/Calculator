@@ -239,6 +239,7 @@ begin
 				end loop;
 				state_next <= bin_2_bcd;
 			when assign_frac =>
+				--trying to understand this
 				state_next <= done;
 			when done =>
 				--Find furthest left BCD digit that is non-zero
