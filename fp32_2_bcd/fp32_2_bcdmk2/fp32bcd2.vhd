@@ -71,7 +71,7 @@ end fp32bcd2;
 
 architecture fp32bcd of fp32bcd2 is
 --States
-	type state_type is (idle, assign, bin_2_bcd, check_five, assign_frac, done);
+	type state_type is (idle, assign, bin_2_bcd, check_five, assign_frac, count_int, out_int, done);
 	signal state_reg, state_next: state_type;
 	--Registers
 	signal fp32_reg, fp32_next: std_logic_vector(31 downto 0);
@@ -89,6 +89,7 @@ architecture fp32bcd of fp32bcd2 is
 	  signal fp32_datastartpoint: integer; -- from RHS
 	  
 	  signal bcdOPdat_reg, bcdOPdat_next: bcdOP; -- Operation variable
+	  signal outcount_reg, outcount_next: integer;
 	  
 	  
 	
@@ -111,6 +112,7 @@ begin
 			fp32_exponent_reg <= (others=>'0');
 			
 			bcdOPdat_reg <= (others=>(others=>'0'));
+			outcount_reg <= 0;
 			--ConvData <= (others=>'0');
 			sign_reg <= '0';
 		elsif (clk'event and clk='1') then --Update registers
@@ -118,6 +120,7 @@ begin
 			fp32_reg <= fp32_next;
 			bcd_reg <= bcd_next;
 			sign_reg <= sign_next;
+			outcount_reg <= outcount_next;
 			loopcounter_reg <= loopcounter_next;
 --			loopcounter_reg(0) <= loopcounter_next(0);
 --			loopcounter_reg(1) <= loopcounter_next(1);
@@ -134,10 +137,10 @@ begin
 	
 	--Data operation process 1
 	--sensitive to all regs being operated on, and input to-be-operated, and start_conv
-	process(state_reg, fp32_reg, bcdOPdat_reg, bcd_reg, sign_reg, loopcounter_reg, start_conv, fp32, fp32_mantissa_reg, fp32_intsect_reg, fp32_fracsect_reg)
+	process(state_reg, fp32_reg, bcdOPdat_reg, bcd_reg, sign_reg, loopcounter_reg, start_conv, fp32, fp32_mantissa_reg, fp32_intsect_reg, fp32_fracsect_reg, outcount_reg)
 			--Attempt at a real variable to make things easier
 			--variable fp32_exponent: unsigned(7 downto 0); -- When or If I have time
-			variable outcount: integer; --Obtains the leftmost digit of the data to be output
+			--variable outcount: integer; --Obtains the leftmost digit of the data to be output
 		begin
 			--preset everything. Nope. Apparently something else that makes it work that I don't understand
 			ready<='0'; --Its doing stuff now.
@@ -146,6 +149,7 @@ begin
 			fp32_next <= fp32_reg;
 			bcd_next <= bcd_reg;
 			sign_next <= sign_reg;
+			outcount_next <= outcount_reg;
 			loopcounter_next <= loopcounter_reg;
 			fp32_mantissa_next <= fp32_mantissa_reg;
 			bcdOPdat_next <= bcdOPdat_reg;
@@ -160,6 +164,7 @@ begin
 					state_next <= assign;
 				end if;
 			when assign =>
+				outcount_next <= 0;
 				--We only want to output 8 BCD digits
 				--If the fp32_intsect makes 8 digits, no point doing the fraction.
 				--don't know if unsigned can deal with negatives!{   if unsigned
@@ -216,8 +221,10 @@ begin
 				bcdOPdat_next(0)<=bcdOPdat_reg(0) sll 1;
 				if fp32_exponent_reg < 24 then
 				--exponent is less than 24 (23 or lower)
+				--pull from intsect up to decimal point
+				
 				else
-				--exponent is greater than or equal to 24	
+				--exponent is greater than or equal to 24	--ELSIF 3 acts when <23 units, after counter(1) expires (no. of zeroes expires)
 					if loopcounter_reg(0)<1 AND loopcounter_reg(1)<1 then
 						bcdOPdat_next(0)(0)<=fp32_intsect_reg(loopcounter_reg(0)); -- Don't forget the last value
 						state_next<=done;
@@ -244,21 +251,67 @@ begin
 				
 				
 				state_next <= done;
-			when done =>
-				--Find furthest left BCD digit that is non-zero
-				outcount:=0;
+			when count_int =>
+			--Find furthest left BCD digit that is non-zero
+				
 				for i in 38 downto 0 loop
 					if not bcdOPdat_reg(i)="0000" then
-						outcount:=i;
+						outcount_next<=i;
 						exit;
 					end if;
 				end loop;
 				--FOUND
+				
+			when out_int =>
+				if outcount_reg <8 then --outcount less than 8, therefore 8 or less digits. Assign part of answer, do fractional if not 8
+					bcd_next(outcount_reg)<=std_logic_vector(bcdOPdat_reg(7));
+					if (outcount_reg-1) >=0 then
+						bcd_next(outcount_reg-1)<=std_logic_vector(bcdOPdat_reg(6));
+					end if;
+					if (outcount_reg-2) >=0 then
+						bcd_next(outcount_reg-2)<=std_logic_vector(bcdOPdat_reg(5));
+					end if;
+					if (outcount_reg-3) >=0 then
+						bcd_next(outcount_reg-3)<=std_logic_vector(bcdOPdat_reg(4));
+					end if;
+					if (outcount_reg-4) >=0 then
+						bcd_next(outcount_reg-4)<=std_logic_vector(bcdOPdat_reg(3));
+					end if;
+					if (outcount_reg-5) >=0 then
+						bcd_next(outcount_reg-5)<=std_logic_vector(bcdOPdat_reg(2));
+					end if;
+					if (outcount_reg-6) >=0 then
+						bcd_next(outcount_reg-6)<=std_logic_vector(bcdOPdat_reg(1));
+					end if;
+					if (outcount_reg-7) >=0 then
+						bcd_next(outcount_reg-7)<=std_logic_vector(bcdOPdat_reg(0));
+						state_next <= done;
+					else
+						state_next <= assign_frac;
+					end if;
+				else --outcount 8 or greater, output everything -> answer
+					bcd_next(7)<=std_logic_vector(bcdOPdat_reg(outcount_reg));
+					bcd_next(6)<=std_logic_vector(bcdOPdat_reg(outcount_reg-1));
+					bcd_next(5)<=std_logic_vector(bcdOPdat_reg(outcount_reg-2));
+					bcd_next(4)<=std_logic_vector(bcdOPdat_reg(outcount_reg-3));
+					bcd_next(3)<=std_logic_vector(bcdOPdat_reg(outcount_reg-4));
+					bcd_next(2)<=std_logic_vector(bcdOPdat_reg(outcount_reg-5));
+					bcd_next(1)<=std_logic_vector(bcdOPdat_reg(outcount_reg-6));
+					bcd_next(0)<=std_logic_vector(bcdOPdat_reg(outcount_reg-7));
+					--BCD exponent is outcount-1
+				end if;
+			
+						
+			
+			
+				
+				
 				--Check to see if fraction is needed, assign part of answer if yes, if no, assign full answer and finish
 				if outcount<7 then --outcount less than 7, therefore less than 8 digits, output first part, then go do fractional section.
-					for i in 7 downto 7-outcount loop
-						bcd_next(i)<=std_logic_vector(bcdOPdat_reg(outcount-(7-i)));
+					for i in 7 downto (7-outcount) loop
+						
 					end loop;
+				
 					
 					state_next <= assign_frac;
 					
