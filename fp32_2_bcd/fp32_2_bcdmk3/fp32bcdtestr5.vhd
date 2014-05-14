@@ -125,6 +125,7 @@ BEGIN
 		--fp32 <= "01000001110010000000000000000000"; --25
 		--fp32 <= "01000000000000000000000000000000"; --2
 		fp32 <= "01001100000000000000000000000000"; --3.3554432E7
+		--fp32<= "00111111100000000000000000000000"; --1
 		start_conv <= '1';
 		wait until falling_edge(clk);
 		wait until falling_edge(clk);
@@ -132,7 +133,7 @@ BEGIN
 		wait until falling_edge(clk);
 		start_conv <= '0';
 
-      wait for clk_period*1000;
+      wait for clk_period*3000;
 
       -- insert stimulus here 
 
