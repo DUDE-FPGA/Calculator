@@ -103,12 +103,13 @@ begin
 	end process;
 	
 	-- Floating point unit instantiation
-	fpu32_add_or_sub : entity work.fpu32 
+	fpu32_add_or_sub : entity work.fpu32_adder 
 		port map(clk, reset, start_adder_reg, adder_done, adder_ready, FP_2, multi1_out, adder_out);
 	fpu32_multi1 : entity work.fpu32_multiply
 		port map(clk, reset, start_multi1_reg, multi1_done, multi1_ready, d_reg, xi_reg, multi1_out);
 	fpu32_multi2 : entity work.fpu32_multiply
 		port map(clk, reset, start_multi2_reg, multi2_done, multi2_ready, xi_reg, adder_out, multi2_out);	
+	-- Multiplier for fp1 and Newton Raphson result for 1/fp2
 	fpu32_multi3 : entity work.fpu32_multiply
 		port map(clk, reset, start_multi3_reg, multi3_done, multi3_ready, multi2_out, fp1_mantissa_reg, multi3_out);
 	
@@ -146,6 +147,8 @@ begin
 					(unsigned(fp1(30 downto 23))-"01111111") 
 					- (unsigned(fp2(30 downto 23))-"01111111") + "01111111";
 				state_next <= multi1;
+			-- Equation for Newton Raphson is x_(i+1) = x_i * (2 - d*x_i)
+			-- Initial x_i is set = 1 (in FP32 format)
 			--------------------------------------
 			-- Beginning of Newton Raphson Loop --
 			--------------------------------------

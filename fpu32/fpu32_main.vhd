@@ -73,7 +73,7 @@ begin
 	end process;
 	
 	-- Floating point unit instantiation
-	fpu32_add_or_sub : entity work.fpu32 
+	fpu32_add_or_sub : entity work.fpu32_adder
 		port map(clk, reset, start_adder_reg, adder_done, adder_ready, fp1, fp2, adder_out);
 	fpu32_multi : entity work.fpu32_multiply
 		port map(clk, reset, start_multi_reg, multi_done, multi_ready, fp1, fp2, multi_out);

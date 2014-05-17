@@ -157,6 +157,7 @@ begin
 				signn_next <= signb_reg xor signs_reg;
 				state_next <= normalise1;
 			when normalise1 =>
+			-- Checks for position of MSB
 				for i in 47 downto 0 loop
 					if (fraca_reg(i) = '1') then
 						msba_next <= i;
@@ -165,8 +166,10 @@ begin
 				end loop;
 				state_next <= normalise2;
 			when normalise2 =>
+				-- Checks size of resultant number, and normalises accordingly
 				if lsb_reg + lsb_reg < 23 then
 					fracn_next(22 downto (22 - (lsb_reg + lsb_reg))) <= fraca_reg((lsb_reg + lsb_reg) downto 0);
+				-- Throws away any bits not between the limits (could be improved with rounding)
 				elsif lsb_reg + lsb_reg > 22 then
 					fracn_next(22 downto 0) <= 
 						fraca_reg((msba_reg - 1) downto ((msba_reg - 1) - 22));

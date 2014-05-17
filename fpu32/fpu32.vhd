@@ -29,14 +29,14 @@ use IEEE.NUMERIC_STD.ALL;
 --library UNISIM;
 --use UNISIM.VComponents.all;
 
-entity fpu32 is
+entity fpu32_adder is
     Port ( clk, reset, start : in  STD_LOGIC;
            done_tick, ready : out  STD_LOGIC;
 			  fp1, fp2 : in std_logic_vector(31 downto 0);
 			  fp_out : out std_logic_vector(31 downto 0));
-end fpu32;
+end fpu32_adder;
 
-architecture fpu32_arch of fpu32 is
+architecture fpu32_arch of fpu32_adder is
 	--Register definitions
 	type state_type is (idle, sort, align1, align2, maths, normalise1, 
 							  normalise2, normalise3, normalise4, output, done);
@@ -161,30 +161,28 @@ begin
 				state_next <= normalise1;
 			-- Check position of MSB
 			when normalise1 =>
+				-- Triggers if mantissa is = 1x.xxxx...
 				if (sum_reg(24) = '1') then
 					sumn_next <= sum_reg(23 downto 0) srl 1;
 					expn_next <= expb_reg + "00000001";
 					state_next<=normalise3;
 				elsif (sum_reg(24 downto 23) = "00") then
---					for i in 0 to 23 loop
---						if sum_reg(23-i)='1' then
---							lead0_next <= to_unsigned(i,6); -- Seems to be overcounting here for some reason
---						end if;
---						exit when sum_reg(i)='1';
---					end loop;
 					state_next <= normalise2;
 
+				-- Triggers if mantissa is already aligned
 				else
 					sumn_next <= sum_reg(23 downto 0);
 					expn_next <= expb_reg;
 					state_next<=normalise3;
 				end if;
+			-- If MSB is below 0. - goes here
 			when normalise2 =>
 				if sum_reg(23 - to_integer(lead0_reg)) = '1' then
 					state_next<=normalise3;
 				else
 					lead0_next<=lead0_reg+"000001";
 				end if;
+			-- Normalises the mantissa 
 			when normalise3 =>
 				if (lead0_reg > "000000") then
 					sumn_next <= sum_reg(23 downto 0) sll to_integer(lead0_reg);
@@ -204,9 +202,5 @@ begin
 				state_next <= idle;
 		end case;
 	end process;
-	--Outputs
-	--Debug - check if correctly sorting
-	--fp_out <= signb_reg & std_logic_vector(expb_reg) & std_logic_vector(fracb_reg);
-
 end fpu32_arch;
 
